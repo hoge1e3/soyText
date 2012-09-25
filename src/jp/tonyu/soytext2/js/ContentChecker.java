@@ -165,10 +165,10 @@ public class ContentChecker implements IDocumentLoader, Wrappable {
 				return super.get(name, start);
 			}
 		};
-		prot.put("a","b");
+		ScriptableObject.putProperty(prot,  "a", "b");
 		child.setPrototype(prot);
 		root.put("test", root, child);
-		child.put("s","c");
+		ScriptableObject.putProperty(child ,"s","c");
 		Object res=c.evaluateString(root,
 				"var buf='';" +
 				"for (var x in test) { buf+=x+'='+test[x]+',';" +

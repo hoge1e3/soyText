@@ -75,9 +75,10 @@ public class JSSession {
         ScriptableObject.putProperty(utils, "isDocument", HashLiteralConv.isDocument);
         ScriptableObject.putProperty(utils, "isHashBlob", HashLiteralConv.isHashBlob);
         ScriptableObject.putProperty(utils, "debug", new Debug());
-        ScriptableObject.putProperty(utils, "safeEval", safeEval);
+        ScriptableObject.putProperty(utils, "safeEval", new SafeEval(root));
         ScriptableObject.putProperty(utils, "bindings", bindings);
         ScriptableObject.putProperty(utils, "contentChecker", newContentChecker);
+        ObjectSealer.sealAll(root);
         Context.exit();
     }
     static BuiltinFunc newContentChecker=new BuiltinFunc() {
@@ -86,7 +87,7 @@ public class JSSession {
             return new ContentChecker(args[0]+"");
         }
     };
-    static BuiltinFunc safeEval=new BuiltinFunc() {
+    /*static BuiltinFunc safeEval=new BuiltinFunc() {
         @Override
         public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
             String source=null, sourceName="safeEval";
@@ -106,7 +107,7 @@ public class JSSession {
             }
             return null;
         }
-    };
+    };*/
     static BuiltinFunc bindings=new BuiltinFunc() {
         @Override
         public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {

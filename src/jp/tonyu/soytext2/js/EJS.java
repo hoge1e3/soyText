@@ -34,7 +34,7 @@ public class EJS implements Wrappable {
 		p.setSpacePattern(null);
 		StringBuilder buf=new StringBuilder();
 		Object[] argo=Scriptables.toArray(ScriptableObject.getProperty(d, HttpContext.ATTR_ARGUMENTORDER));
-		buf.append("res=function ($,params) { \n"); {
+		buf.append("var res=function ($,params) { \n"); {
 			buf.append("if (!params) params={};\n");
 			for (Object arg:argo) {
 				buf.append(SPrintf.sprintf("var %s=params.%s;\n"
@@ -56,7 +56,7 @@ public class EJS implements Wrappable {
   	    		}
   	    	}
 		}
-		buf.append("}; \n");
+		buf.append("}; res; \n");
 //		buf.append("a=(function (a,b) {return a+b;})+\"\"; \n");
 //		buf.append("res.str=res+\"\"; \n");
 //		buf.append("res;\n");
