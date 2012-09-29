@@ -139,7 +139,7 @@ public class LooseTransaction {
                 documentSet.transaction(TransactionMode.WRITE);
                 entering.add(th);
                 Log.d(this, th+" added for write 1.");
-                mode=TransactionMode.READ;
+                mode=TransactionMode.WRITE;
                 return Action.enter;
             } else if (TransactionMode.READ.equals(t)) {
                 assert entering.contains(th);

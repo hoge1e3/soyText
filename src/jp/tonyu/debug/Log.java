@@ -2,6 +2,7 @@ package jp.tonyu.debug;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Vector;
 
@@ -17,12 +18,17 @@ public class Log {
 		}
 		lw.setVisible(true);
 	}
+	static boolean delay=true;
+	static class Stat {
+	    int count=0,length=0;
+	}
+	static HashMap<String,Stat>stat=new HashMap<String, Stat>();
 	static StringBuilder buf=new StringBuilder();
 	static HashSet<String> whiteList=new HashSet<String>();
 	static HashSet<String> blackList=new HashSet<String>();
 	static boolean useWhiteList=false;
 	static {
-		String[] whiteLista=new String[] {"query","query-prep","JDBC","jp.tonyu.soytext2.document.SDB"};
+		String[] whiteLista=new String[] {};//"query","query-prep","JDBC","jp.tonyu.soytext2.document.SDB"};
 		String[] blackLista=new String[] {};
 		for (String s:whiteLista) {
 			whiteList.add(s);
@@ -30,7 +36,7 @@ public class Log {
 		for (String s:blackLista) {
 			blackList.add(s);
 		}
-		runThread();
+		if (delay) runThread();
 	}
 	public static void runThread() {
 	    Thread t= new Thread() {
@@ -57,22 +63,45 @@ public class Log {
 	    t.start();
 	}
 	public static void addBuf(String s) {
-	    synchronized (buf) {
-            buf.append(s+"\n");
-            buf.notifyAll();
-        }
+	    if (delay) {
+	        synchronized (buf) {
+	            buf.append(s+"\n");
+	            buf.notifyAll();
+	        }
+	    } else {
+	        System.out.println(s);
+	    }
+	}
+	public static String reportStat() {
+	    StringBuilder b=new StringBuilder();
+	    for (String s: stat.keySet()) {
+	        Stat st=stat.get(s);
+	        b.append(s+"\t"+st.count+"\t"+st.length+"\n");
+	    }
+	    return b.toString();
 	}
 	public static void d(Object tag,Object content) {
 		//if ("ToValues".equals(tag) || "ClassIdx".equals(tag) ||"getSPClass".equals(tag)) {
 		tag=convTag(tag);
 	    if ( tagMatch(tag) && wordMatch(content)) {
 			String cont = "["+tag+"]"+content;
-			addBuf(new TDate().toString("yy/MM/dd HH:mm:ss.SSS")+":"+cont);
+			String s=new TDate().toString("yy/MM/dd HH:mm:ss.SSS")+":"+cont;
+            addStat(tag+"", s.length());
+            addBuf(s);
 			//System.out.flush();
 		}
 	}
 
-	private static Object convTag(Object tag) {
+	private static void addStat(String tag, int length) {
+        Stat s=stat.get(tag);
+        if (s==null) {
+            s=new Stat();
+            stat.put(tag, s);
+        }
+        s.count++;
+        s.length+=length;
+    }
+    private static Object convTag(Object tag) {
 	    if (tag==null) return "null";
 	    if (tag instanceof String) {
             String s=(String) tag;

@@ -388,16 +388,8 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     private boolean callDocIter(DocumentScriptable s, final Query q, final Function iter) {
         QueryResult r=q.matches(s);
         if (r.filterMatched) {
-            Log.d(this, "Filter matched1 "+s);
             Object brk=null;
-            //try {
-                brk=jsSession().call(iter, iter, new Object[] { s });
-            /*} catch(Throwable e) {
-                Log.d(this, "Error!?");
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }*/
-            Log.d(this, "Filter matched2 "+s);
+            brk=jsSession().call(iter, iter, new Object[] { s });
             if (brk instanceof Boolean) {
                 Boolean b=(Boolean) brk;
                 if (b.booleanValue())
@@ -557,20 +549,28 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         Set<DocumentScriptable> willReload=new HashSet<DocumentScriptable>();
         Set<String> willUpdateIndex=new HashSet<String>();
         for (DocumentRecord dr : drs) {
-            DocumentRecord existentDr=documentSet.byId(dr.id);
+            DocumentRecord existentDr;
+            if (objs.containsKey(dr.id)) {
+                DocumentScriptable ds=objs.get(dr.id);
+                willReload.add(ds);
+                existentDr=ds.getDocument();
+            } else {
+                existentDr=documentSet.byId(dr.id);
+            }
             if (existentDr!=null) {
                 copyDocumentExceptDates(dr, existentDr);
+                Log.d(this, "Imported Existent: "+existentDr.content);
                 /* documentSet. */save(existentDr, new PairSet<String, String>());
             } else {
                 DocumentRecord newDr=getDocumentSet().newDocument(dr.id);
                 copyDocumentExceptDates(dr, newDr);
+                Log.d(this, "Imported New: "+newDr.content);
                 /* documentSet. */save(newDr, new PairSet<String, String>());
             }
             willUpdateIndex.add(dr.id);
-            if (objs.containsKey(dr.id))
-                willReload.add(objs.get(dr.id));
         }
         for (DocumentScriptable ds : willReload) {
+            Log.d(this, "Reloading ds: "+ds.getDocument().content);
             ds.reloadFromContent();
         }
         // if (((SDB)documentSet).useIndex()) {

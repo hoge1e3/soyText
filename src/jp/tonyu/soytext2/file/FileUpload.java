@@ -27,8 +27,8 @@ import org.mozilla.javascript.Scriptable;
 
 
 public class FileUpload implements Wrappable {
-    private static final String BODY="body";
-    private static final String FILENAME="filename";
+    static final String BODY="body";
+    static final String FILENAME="filename";
 
     public static Scriptable receiveFile(HttpContext c) throws FileUploadException, IOException {
         HttpServletRequest req=c.getReq();

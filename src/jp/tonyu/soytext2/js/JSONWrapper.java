@@ -29,7 +29,7 @@ public class JSONWrapper implements Wrappable{
 			}
 			return super.preformat(context, value);
 		}
-		
+
 	};
 	public void setPrettyPrint(boolean p) {
 		json.setPrettyPrint(p);
@@ -42,7 +42,7 @@ public class JSONWrapper implements Wrappable{
 			Maps.entries(m).each(new MapAction<Object, Object>() {
 				@Override
 				public void run(Object key, Object value) {
-					ScriptableObject.putProperty(res, key+"", postparse(value,jssession));
+					Scriptables.put(res, key+"", postparse(value,jssession));
 				}
 			});
 			return res;
@@ -78,7 +78,7 @@ public class JSONWrapper implements Wrappable{
 	}*/
 	/*public static void main(String[] args) {
 		JSSession.cur.enter(JSSession.get("test"), new Runnable() {
-			
+
 			@Override
 			public void run() {
 				JSONWrapper json=new JSONWrapper();
@@ -99,7 +99,7 @@ public class JSONWrapper implements Wrappable{
 						"res;";
 				Object r=j.eval("json", src, Maps.create("json", (Object)json));
 				System.out.println(r);
-				
+
 			}
 		});
 	}*/

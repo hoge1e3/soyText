@@ -9,5 +9,11 @@
 	<classpathentry kind="lib" path="lib/rhino_patched.jar" sourcepath="/Rhino_e4x_patched"/>
 	<classpathentry kind="lib" path="lib/servlet-api.jar"/>
 	<classpathentry kind="lib" path="lib/sqlite-jdbc-3.7.2.jar"/>
+	<classpathentry kind="lib" path="lib/httpclient-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/httpclient-cache-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/httpcore-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/httpmime-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/httpcore-ab-4.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/httpcore-nio-4.2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

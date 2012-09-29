@@ -323,7 +323,7 @@ public class HttpContext implements Wrappable {
         /*else if (s.length>=2 && s[1].equals("import1")) {
         	importFromVer1();
         }*/
-        else if (s.length>=2 && s[1].equals("errorlog")) {
+        else if (s.length>=2 && s[1].equalsIgnoreCase("errorlog")) {
         	errorLog();
         }
         else if (req.getPathInfo().equals("/")) {
@@ -340,6 +340,9 @@ public class HttpContext implements Wrappable {
     private void errorLog() throws IOException {
     	res.setContentType(TEXT_PLAIN_CHARSET_UTF_8);
     	PrintWriter w=res.getWriter();
+    	w.println("-------Log Stat---");
+    	w.println(Log.reportStat());
+        w.println("-------Error logs---");
     	w.println(Log.errorLog.getBuffer());
     	w.close();
 	}

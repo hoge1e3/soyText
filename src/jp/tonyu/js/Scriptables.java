@@ -40,7 +40,7 @@ public class Scriptables {
 		}
 		return defValue;
 	}
-	
+
 	public static void each(Scriptable s, StringPropAction action) {
 		for (Object o:s.getIds()) {
 			if (o instanceof String) {
@@ -85,7 +85,7 @@ public class Scriptables {
 			if (k instanceof String) {
 				String sk = (String) k;
 				Object value = s.get(sk, s);
-				map.put(sk, value);				
+				map.put(sk, value);
 			}
 		}
 	}
@@ -103,7 +103,7 @@ public class Scriptables {
 			}
 		}
 		return s;
-		
+
 	}
     public static String literal(String raw) {
    	 String cook=raw;
@@ -118,16 +118,16 @@ public class Scriptables {
 		for (Object k:from.getIds()) {
 			if (k instanceof String) {
 				String kstr = (String) k;
-				Object value=ScriptableObject.getProperty(from, kstr); 
+				Object value=ScriptableObject.getProperty(from, kstr);
 				ScriptableObject.putProperty(to, kstr, value);
 			}
 			if (k instanceof Number) {
 				int kint = ((Number) k).intValue();
-				Object value=ScriptableObject.getProperty(from, kint); 
+				Object value=ScriptableObject.getProperty(from, kint);
 				ScriptableObject.putProperty(to, kint, value);
 			}
 		}
-		
+
 	}
 	public static Scriptable getAsScriptable(Scriptable obj,String name) {
 		Object r=ScriptableObject.getProperty(obj, name);
@@ -176,5 +176,17 @@ public class Scriptables {
 		}
 		return null;
 	}
-
+	/**
+	 * If the name is integer-like, name is converted to int
+	 * @param obj
+	 * @param name
+	 * @param value
+	 */
+	public static void put(Scriptable obj, String name, Object value) {
+	    try {
+	        ScriptableObject.putProperty(obj, Integer.parseInt(name), value);
+	    } catch (NumberFormatException n) {
+            ScriptableObject.putProperty(obj, name, value);
+	    }
+	}
 }
