@@ -78,7 +78,7 @@ public class JSSession {
         ScriptableObject.putProperty(utils, "safeEval", new SafeEval(root));
         ScriptableObject.putProperty(utils, "bindings", bindings);
         ScriptableObject.putProperty(utils, "contentChecker", newContentChecker);
-        //ObjectSealer.sealAll(root);
+        ObjectSealer.sealAll(root);
         Context.exit();
     }
     static BuiltinFunc newContentChecker=new BuiltinFunc() {
