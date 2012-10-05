@@ -25,6 +25,17 @@ import java.util.Map;
 import jp.tonyu.debug.Log;
 
 public class JDBCCursor implements ResultSet {
+/*
+#ifdef jre7
+    public <T> T getObject(int arg0, Class<T> arg1) throws SQLException {
+        return res.getObject(arg0, arg1);
+    }
+    public <T> T getObject(String arg0, Class<T> arg1) throws SQLException {
+        return res.getObject(arg0, arg1);
+    }
+#endif
+*/
+
     Statement st;
     ResultSet res;
     JDBCHelper helper;
@@ -657,5 +668,6 @@ public class JDBCCursor implements ResultSet {
     public boolean wasNull() throws SQLException {
         return res.wasNull();
     }
+
 
 }

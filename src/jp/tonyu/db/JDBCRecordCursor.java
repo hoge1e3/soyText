@@ -24,10 +24,20 @@ import java.util.Iterator;
 import java.util.Map;
 
 import jp.tonyu.debug.Log;
-
+// NOTE: some method does not work in Java 6. Delete them.
 
 
 public class JDBCRecordCursor<T extends JDBCRecord> implements ResultSet,Iterable<T> {
+/*
+#ifdef jdk7
+    public <T> T getObject(int arg0, Class<T> arg1) throws SQLException {
+        return cur.getObject(arg0, arg1);
+    }
+    public <T> T getObject(String arg0, Class<T> arg1) throws SQLException {
+        return cur.getObject(arg0, arg1);
+    }
+#endif
+*/
 	ResultSet cur;
 	T record;
 	@Override
@@ -423,7 +433,7 @@ public class JDBCRecordCursor<T extends JDBCRecord> implements ResultSet,Iterabl
 			throws SQLException {
 		cur.updateAsciiStream(columnLabel, x, length);
 	}
-	public void updateAsciiStream(String columnLabel, InputStream x)
+    public void updateAsciiStream(String columnLabel, InputStream x)
 			throws SQLException {
 		cur.updateAsciiStream(columnLabel, x);
 	}
