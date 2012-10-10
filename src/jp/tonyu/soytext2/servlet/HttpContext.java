@@ -958,7 +958,7 @@ public class HttpContext implements Wrappable {
 		boolean prompt=true;
 		if (/*"logout".equals(user) || */
 				(user!=null && user.length()>0 && pass!=null && pass.length()>0)) {
-			if (Auth.cur.get().auth(user, pass)) {
+			if (Auth.cur.get().login(user, pass)) {
 				prompt=false;
 	    		String after=params().get("after");
 	    		if (after!=null) {

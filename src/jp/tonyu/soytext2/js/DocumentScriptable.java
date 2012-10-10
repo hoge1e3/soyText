@@ -339,9 +339,9 @@ public class DocumentScriptable implements Function {
 			}
 			i++;
 		}
-		for (Object r:res) {
+		/*for (Object r:res) {
 			Log.d(this ," getids - "+r);
-		}
+		}*/
 		return res;
 	}
 

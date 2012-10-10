@@ -13,6 +13,7 @@ import jp.tonyu.js.Prototype;
 
 import jp.tonyu.js.Wrappable;
 import jp.tonyu.soytext2.document.DocumentSet;
+import jp.tonyu.soytext2.servlet.Auth;
 import jp.tonyu.util.MapAction;
 import jp.tonyu.util.Maps;
 import jp.tonyu.util.Resource;
@@ -78,9 +79,16 @@ public class JSSession {
         ScriptableObject.putProperty(utils, "safeEval", new SafeEval(root));
         ScriptableObject.putProperty(utils, "bindings", bindings);
         ScriptableObject.putProperty(utils, "contentChecker", newContentChecker);
+        ScriptableObject.putProperty(utils, "auth", auth);
         ObjectSealer.sealAll(root);
         Context.exit();
     }
+    static BuiltinFunc auth=new BuiltinFunc() {
+        @Override
+        public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
+            return Auth.cur.get();
+        }
+    };
     static BuiltinFunc newContentChecker=new BuiltinFunc() {
         @Override
         public Object call(Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {

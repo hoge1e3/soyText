@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import jp.tonyu.db.NotInWriteTransactionException;
+import jp.tonyu.db.TransactionMode;
 import jp.tonyu.debug.Log;
 import jp.tonyu.js.AllPropAction;
 import jp.tonyu.js.NumberPropAction;
@@ -144,5 +145,10 @@ public class DBHelper implements Wrappable{
     }
     public HashBlob writeHashBlob(InputStream i) throws IOException {
         return loader.writeHashBlob(i);
+    }
+    public Object transactionStatus() {
+        TransactionMode mode=loader.ltr.thisThreadMode();
+        if (mode==null) return mode;
+        return mode+"";
     }
 }
