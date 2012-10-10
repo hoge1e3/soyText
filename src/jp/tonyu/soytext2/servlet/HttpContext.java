@@ -11,7 +11,6 @@ import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
@@ -29,16 +28,12 @@ import jp.tonyu.soytext2.browserjs.IndentAdaptor;
 import jp.tonyu.soytext2.document.DocumentRecord;
 import jp.tonyu.soytext2.document.DocumentSet;
 import jp.tonyu.soytext2.document.SDB;
-import jp.tonyu.soytext2.file.BinData;
 import jp.tonyu.soytext2.file.ReadableBinData;
 import jp.tonyu.soytext2.file.ZipMaker;
 import jp.tonyu.soytext2.js.ContentChecker;
 import jp.tonyu.soytext2.js.DocumentLoader;
 import jp.tonyu.soytext2.js.DocumentScriptable;
 import jp.tonyu.soytext2.js.JSSession;
-import jp.tonyu.soytext2.search.Query;
-import jp.tonyu.soytext2.search.QueryBuilder;
-import jp.tonyu.soytext2.search.expr.AttrOperator;
 import jp.tonyu.util.Literal;
 import jp.tonyu.util.MapAction;
 import jp.tonyu.util.Maps;
@@ -305,7 +300,7 @@ public class HttpContext implements Wrappable {
         else if (s.length>=2 && s[1].equalsIgnoreCase("fileuploaddone")) {
         	fileUploadDone();
         }
-        else if (s.length>=2 && s[1].equalsIgnoreCase("download")) {
+        /*else if (s.length>=2 && s[1].equalsIgnoreCase("download")) {
         	download();
         }
         else if (s.length>=2 && s[1].equalsIgnoreCase("search")) {
@@ -334,8 +329,11 @@ public class HttpContext implements Wrappable {
         	}
         }
         else {
-        	byName();
+            notfound(s[1]);
         }
+        /*else {
+        	byName();
+        }*/
     }
     private void errorLog() throws IOException {
     	res.setContentType(TEXT_PLAIN_CHARSET_UTF_8);
@@ -511,7 +509,7 @@ public class HttpContext implements Wrappable {
     	}
 
     }*/
-	private void download() throws IOException {
+	/*private void download() throws IOException {
 		//input param:
 		//  dbid=(client's DBID)
 		//  credential=(client's user name or something)
@@ -535,7 +533,8 @@ public class HttpContext implements Wrappable {
     	final PrintWriter writer=res.getWriter();
         exportDocuments(since, writer, null);
 
-	}
+	}*/
+	/*
 	private void exportDocuments(final long since, final PrintWriter writer,
 			final List<String> exportedIds) {
 		documentLoader.search("", null, new BuiltinFunc() {
@@ -552,7 +551,7 @@ public class HttpContext implements Wrappable {
 				} else return true;
 			}
 		});
-	}
+	}*/
 	/*private void upload() throws IOException {
 		//input params:
 		//  syncid=(this server's syncProfile id)
@@ -721,7 +720,7 @@ public class HttpContext implements Wrappable {
 		return jsSession;
 	}
 
-	private void byName() throws IOException {
+	/*private void byName() throws IOException {
 		String name=req.getPathInfo().replaceAll("^/", "").replaceAll("/.*", "");
 		Query q=QueryBuilder.create("name:?").tmpl("name", name, AttrOperator.exact).toQuery();
 		final Ref<Boolean> found=Ref.create(false);
@@ -745,12 +744,12 @@ public class HttpContext implements Wrappable {
 			notfound(name);
 		}
 
-	}
+	}*/
 	private String contentStatus(ContentChecker c) {
 		StringBuilder msg=new StringBuilder(c.getMsg()+"<br/>\n");
 
 
-		for (String name:c.getUndefinedSymbols()) {
+		/*for (String name:c.getUndefinedSymbols()) {
 			String sel = SEL+name;
 			String searchAddr = Html.p(romRootPath()+"/search?sel=%u&q=%u",sel, "name:"+name);
 			msg.append(Html.p("<a href=%a target=%a>%t</a> <input id=%a name=%a/> <br/>\n",
@@ -760,7 +759,7 @@ public class HttpContext implements Wrappable {
 					 sel,
 					 sel
 			));
-		}
+		}*/
 		return msg+"";
 	}
 	private String romRootPath() {
@@ -1036,7 +1035,22 @@ public class HttpContext implements Wrappable {
 		}
     }
 	private void all() throws IOException {
-		search("",null);
+        if (assertRoot()) return;
+        final StringBuffer buf = new StringBuffer(isAjaxRequest() ? "" : menuBar());
+        documentLoader.all(new BuiltinFunc() {
+            int c=0;
+            @Override
+            public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                    Object[] args) {
+                DocumentScriptable s=(DocumentScriptable)args[0];
+                buf.append(linkBar(s,null));
+                c++;
+                return c>100;
+            }
+        });
+        buf.append("<BR>insts= "+SMain.insts);
+        res.setContentType (TEXT_HTML_CHARSET_UTF_8);
+        Httpd.respondByString(res, buf.toString());
 	}
 	public String linkBar(DocumentScriptable ds) {
 		return linkBar(ds,null);
@@ -1087,7 +1101,7 @@ public class HttpContext implements Wrappable {
 	private boolean isAjaxRequest() {
 		return "ajax".equals( params().get("_responseType") );
 	}
-	private void search() throws IOException
+	/*private void search() throws IOException
     {
     	Map<String,String> params=params();
     	//args[2]: id of savedsearch
@@ -1099,8 +1113,8 @@ public class HttpContext implements Wrappable {
     		search(cstr,params.get("sel"));
 
     	}
-    }
-    private void search(String cstr, final String sel) throws IOException {
+    }*/
+	/*private void search(String cstr, final String sel) throws IOException {
     	if (assertRoot()) return;
     	final StringBuffer buf = new StringBuffer(isAjaxRequest() ? "" : menuBar());
         documentLoader.search(cstr, null, new BuiltinFunc() {
@@ -1117,7 +1131,7 @@ public class HttpContext implements Wrappable {
         buf.append("<BR>insts= "+SMain.insts);
     	res.setContentType (TEXT_HTML_CHARSET_UTF_8);
         Httpd.respondByString(res, buf.toString());
-	}
+	}*/
 	public String rootPath() {
     	int length=argsIncludingRom().length;
 		//  docBase()/byId/****
@@ -1154,11 +1168,11 @@ public class HttpContext implements Wrappable {
         		                ,CONTENT_TYPE,TEXT_HTML_CHARSET_UTF_8));
         buf.append("<body>");
         buf.append("User: "+user()+" | ");
-        buf.append(Html.p("<a href=%a>ログイン</a>  |" , path+"/auth"));
-        buf.append(Html.p("<a href=%a>ホーム</a>  |" , path+"/all"));
-        buf.append(Html.p("<a href=%a>新規作成</a> | ", path+"/new"));
-        buf.append(Html.p("<form action=%s method=POST style=\"display: inline;\">" +
-        		"<input name=q value=%s></form>", path+"/search" ,q));
+        buf.append(Html.p("<a href=%a>Login..</a>  |" , path+"/auth"));
+        buf.append(Html.p("<a href=%a>Recents</a>  |" , path+"/all"));
+        buf.append(Html.p("<a href=%a>New..</a> | ", path+"/new"));
+        //buf.append(Html.p("<form action=%s method=POST style=\"display: inline;\">" +
+       // 		"<input name=q value=%s></form>", path+"/search" ,q));
         //buf.append(Html.p("<a href=%a>検索</a> |\n" , path+"/search"));
         buf.append("DB: "+documentSet());
         buf.append("| Loaders: "+DocumentLoader.loaders.size());

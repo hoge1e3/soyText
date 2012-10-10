@@ -37,7 +37,7 @@ public class QueryBuilder {
 	public void addCond(String c) {
 		cond+=c+" ";
 	}
-	public Query toQuery() {
+	/*public Query toQuery() {
 		return new Query(cond, tmpls);
-	}
+	}*/
 }

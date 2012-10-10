@@ -36,8 +36,7 @@ public class DBHelper implements Wrappable{
 
 	public Object q(Object value) {
 		if (value instanceof String) {
-			String qstr = (String) value;
-			return new DBSearcher(this,qstr);
+			return new AndDBSearcher(this);
 		} else if (value instanceof DocumentScriptable){
 			DocumentScriptable ds=(DocumentScriptable)value;
 			return new AndDBSearcher(this).is(ds.id());
@@ -67,11 +66,10 @@ public class DBHelper implements Wrappable{
 	public AndDBSearcher qe(String name, Object value) {
 		return new AndDBSearcher(this).qe(name, value);
 	}
-
-	public Object find(Function iter) {
+	/*public Object find(Function iter) {
 		loader.search("", null, iter);
 		return this;
-	}
+	}*/
 
 	public Object insert(Scriptable obj) {
 		DocumentScriptable d = loader.newDocument(obj);

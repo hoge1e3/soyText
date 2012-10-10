@@ -2,15 +2,10 @@ package jp.tonyu.soytext2.js;
 
 import jp.tonyu.debug.Log;
 import jp.tonyu.js.BuiltinFunc;
-import jp.tonyu.js.ContextRunnable;
-import jp.tonyu.js.Scriptables;
 import jp.tonyu.js.Wrappable;
-import jp.tonyu.soytext2.document.DocumentRecord;
-import jp.tonyu.soytext2.document.IndexRecord;
 import jp.tonyu.soytext2.search.AndQueryBuilder;
-import jp.tonyu.soytext2.search.Query;
-import jp.tonyu.soytext2.search.QueryBuilder;
 import jp.tonyu.soytext2.search.expr.AttrOperator;
+import jp.tonyu.soytext2.search.expr.QueryExpression;
 import jp.tonyu.util.Ref;
 import jp.tonyu.util.Resource;
 
@@ -29,13 +24,13 @@ public class AndDBSearcher implements Wrappable {
 	}
 	private AndQueryBuilder qb;
 	public void each(Function iter) {
-		dbscr.loader.searchByQuery(qb.toQuery(), iter);
+		dbscr.loader.searchByQuery(qb.toQueryExpression(), iter);
 	}
 	public Object template(final Function tmpl) {
 		Scriptable r=(Scriptable)DocumentLoader.curJsSesssion().eval("dbtmp",
 				Resource.text(DBTemplate.class,".js"));
 		final Function add=(Function)ScriptableObject.getProperty(r, "add");
-		dbscr.loader.searchByQuery(qb.toQuery(), new BuiltinFunc() {
+		dbscr.loader.searchByQuery(qb.toQueryExpression(), new BuiltinFunc() {
 
 			@Override
 			public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -63,7 +58,7 @@ public class AndDBSearcher implements Wrappable {
 
 	public Object find1() {
 		final Ref<Object> res=new Ref<Object>();
-		Query query = qb.toQuery();
+		QueryExpression query = qb.toQueryExpression();
 		Log.d(this, "Find1 : "+query);
 		dbscr.loader.searchByQuery(query, new BuiltinFunc() {
 

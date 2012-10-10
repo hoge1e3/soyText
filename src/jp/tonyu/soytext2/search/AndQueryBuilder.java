@@ -33,7 +33,10 @@ public class AndQueryBuilder {
 		return this;
 	}
 
-	public Query toQuery() {
-		return new Query(new QueryTemplate(cond));
+	public QueryExpression toQueryExpression() {
+	    return cond;
 	}
+	/*public Query toQuery() {
+		return new Query(new QueryTemplate(cond));
+	}*/
 }

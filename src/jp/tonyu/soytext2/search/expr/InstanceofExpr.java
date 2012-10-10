@@ -1,9 +1,6 @@
 package jp.tonyu.soytext2.search.expr;
 
-import org.mozilla.javascript.Function;
-
 import jp.tonyu.soytext2.js.DocumentScriptable;
-import jp.tonyu.soytext2.search.QueryMatcher;
 import jp.tonyu.soytext2.search.QueryResult;
 
 public class InstanceofExpr extends QueryExpression {
@@ -15,7 +12,7 @@ public class InstanceofExpr extends QueryExpression {
 	}
 
 	@Override
-	public QueryResult matches(DocumentScriptable d, QueryMatcher context) {
+	public QueryResult matches(DocumentScriptable d) {
 		// always true because index is used
 		return new QueryResult(true);
 	}

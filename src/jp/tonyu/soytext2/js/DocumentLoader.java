@@ -14,18 +14,18 @@ import java.util.regex.Pattern;
 
 import jp.tonyu.db.NotInReadTransactionException;
 import jp.tonyu.db.NotInWriteTransactionException;
-import jp.tonyu.db.WriteAction;
 import jp.tonyu.debug.Log;
+import jp.tonyu.js.BuiltinFunc;
 import jp.tonyu.js.ContextRunnable;
 import jp.tonyu.js.Scriptables;
 import jp.tonyu.js.StringPropAction;
 import jp.tonyu.js.Wrappable;
 import jp.tonyu.soytext2.auth.AuthenticatorList;
+import jp.tonyu.soytext2.document.DocumentAction;
+import jp.tonyu.soytext2.document.DocumentRecord;
+import jp.tonyu.soytext2.document.DocumentSet;
 import jp.tonyu.soytext2.document.HashBlob;
 import jp.tonyu.soytext2.document.IndexAction;
-import jp.tonyu.soytext2.document.DocumentRecord;
-import jp.tonyu.soytext2.document.DocumentAction;
-import jp.tonyu.soytext2.document.DocumentSet;
 import jp.tonyu.soytext2.document.IndexRecord;
 import jp.tonyu.soytext2.document.LooseReadAction;
 import jp.tonyu.soytext2.document.LooseTransaction;
@@ -33,13 +33,9 @@ import jp.tonyu.soytext2.document.LooseWriteAction;
 import jp.tonyu.soytext2.document.PairSet;
 import jp.tonyu.soytext2.document.UpdatingDocumentAction;
 import jp.tonyu.soytext2.file.ReadableBinData;
-import jp.tonyu.soytext2.search.Query;
-import jp.tonyu.soytext2.search.QueryBuilder;
 import jp.tonyu.soytext2.search.QueryResult;
-import jp.tonyu.soytext2.search.QueryTemplate;
 import jp.tonyu.soytext2.search.expr.AndExpr;
 import jp.tonyu.soytext2.search.expr.AttrExpr;
-import jp.tonyu.soytext2.search.expr.AttrOperator;
 import jp.tonyu.soytext2.search.expr.BackLinkExpr;
 import jp.tonyu.soytext2.search.expr.InstanceofExpr;
 import jp.tonyu.soytext2.search.expr.QueryExpression;
@@ -290,10 +286,10 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         extend(res, hash);
         return res;
     }
-    public void search(String cond, Scriptable tmpl, final Function iter) {
+    /*public void search(String cond, Scriptable tmpl, final Function iter) {
         final Query q=newQuery(cond, tmpl);
         searchByQuery(q, iter);
-    }
+    }*/
     /*
      * private Map<String, String> extractIndexExpr(QueryExpression e) throws
      * NotInReadTransactionException { final Map<String, String> idxs=new
@@ -338,10 +334,8 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         }
         // return null;
     }
-    private Map<String, String> extractIdxMap(Query q) {
-        final QueryTemplate qt=q.getTemplate();
-        final QueryExpression e=qt.getCond();
-        Log.d(this, "Search by "+q);
+    private Map<String, String> extractIdxMap(final QueryExpression e) {
+        Log.d(this, "Search by "+e);
         final Map<String, String> idxs=new HashMap<String, String>();
         ltr.read(new LooseReadAction() {
             public void run() throws NotInReadTransactionException {
@@ -350,7 +344,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         });
         return idxs;
     }
-    public void searchByQuery(final Query q, final Function iter) {
+    public void searchByQuery(final QueryExpression q, final Function iter) {
         final Map<String, String> idxs=extractIdxMap(q);
         if (idxs.size()==0) {
             ltr.read(new LooseReadAction() {
@@ -385,7 +379,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             });
         }
     }
-    private boolean callDocIter(DocumentScriptable s, final Query q, final Function iter) {
+    private boolean callDocIter(DocumentScriptable s, final QueryExpression q, final Function iter) {
         QueryResult r=q.matches(s);
         if (r.filterMatched) {
             Object brk=null;
@@ -398,7 +392,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         }
         return false;
     }
-    public void updatingSearchByQuery(final Query q, final Function iter) {
+    public void updatingSearchByQuery(final QueryExpression q, final Function iter) {
         ltr.write(new LooseWriteAction() {
             @Override
             public void run() throws NotInWriteTransactionException {
@@ -406,7 +400,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             }
         });
     }
-    public Query newQuery(String cond, Scriptable tmpl) {
+    /*public Query newQuery(String cond, Scriptable tmpl) {
         final QueryBuilder qb=QueryBuilder.create(cond);
         if (tmpl!=null) {
             Scriptables.each(tmpl, new StringPropAction() {
@@ -423,18 +417,10 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
                     qb.tmpl(key, value, op);
                 }
             });
-            /*
-             * for (Object n:tmpl.getIds()) { if (n instanceof String) { String
-             * name = (String) n; Object value=tmpl.get(name, tmpl);
-             * AttrOperator op=AttrOperator.ge; if (value instanceof String) {
-             * String svalue = (String) value; if (svalue.startsWith("=")) {
-             * op=AttrOperator.exact; value=svalue.substring(1); } }
-             * qb.tmpl(name, value, op); } }
-             */
         }
         final Query q=qb.toQuery();
         return q;
-    }
+    }*/
     /*
      * (non-Javadoc)
      *
@@ -612,5 +598,8 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
                 return null;
             }
         });
+    }
+    public void all(BuiltinFunc builtinFunc) {
+        searchByQuery(new AndExpr(), builtinFunc);
     }
 }
