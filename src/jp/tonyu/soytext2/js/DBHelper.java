@@ -149,4 +149,7 @@ public class DBHelper implements Wrappable{
         if (mode==null) return mode;
         return mode+"";
     }
+    public void all(Function iter) {
+        loader.all(iter);
+    }
 }

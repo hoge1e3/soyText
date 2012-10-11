@@ -599,7 +599,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             }
         });
     }
-    public void all(BuiltinFunc builtinFunc) {
+    public void all(Function builtinFunc) {
         searchByQuery(new AndExpr(), builtinFunc);
     }
 }
