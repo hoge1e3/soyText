@@ -19,9 +19,9 @@ public class QueryExpressionParser {
 	public QueryExpressionParser(CharSequence s) {
 		p=new Parser(s);
 	}
-	public QueryExpression parse() {
+	public AndExpr parse() {
 		if (parseCond() && p.endOfSource()) {
-			return lastCond;
+			return (AndExpr)lastCond;
 		}
 		throw p.getLastError();
 	}
@@ -111,7 +111,7 @@ public class QueryExpressionParser {
 		System.out.println( new QueryExpressionParser("type:=SavedSearch condition:?").parse() );
 
 	}
-	public static QueryExpression parse(String string) {
+	public static AndExpr parse(String string) {
 		return new QueryExpressionParser(string).parse();
 	}
 }

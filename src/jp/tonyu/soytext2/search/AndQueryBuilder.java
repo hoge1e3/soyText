@@ -14,8 +14,13 @@ import jp.tonyu.soytext2.search.expr.KeywordExpr;
 import jp.tonyu.soytext2.search.expr.QueryExpression;
 
 public class AndQueryBuilder {
-	AndExpr cond=new AndExpr();
-
+	AndExpr cond;
+	public AndQueryBuilder(AndExpr cond) {
+	    this.cond=cond;
+	}
+	public AndQueryBuilder() {
+	    this(new AndExpr());
+	}
 	public AndQueryBuilder instof(String klassId) {
 		cond.add(new InstanceofExpr(klassId));
 		return this;

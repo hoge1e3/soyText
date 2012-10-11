@@ -4,6 +4,7 @@ import jp.tonyu.debug.Log;
 import jp.tonyu.js.BuiltinFunc;
 import jp.tonyu.js.Wrappable;
 import jp.tonyu.soytext2.search.AndQueryBuilder;
+import jp.tonyu.soytext2.search.expr.AndExpr;
 import jp.tonyu.soytext2.search.expr.AttrOperator;
 import jp.tonyu.soytext2.search.expr.QueryExpression;
 import jp.tonyu.util.Ref;
@@ -22,7 +23,12 @@ public class AndDBSearcher implements Wrappable {
 		this.dbscr = dbscr;
 		qb=new AndQueryBuilder();
 	}
-	private AndQueryBuilder qb;
+	public AndDBSearcher(DBHelper dbscr, AndExpr andExpr) {
+        super();
+        this.dbscr = dbscr;
+        qb=new AndQueryBuilder(andExpr);
+	}
+    private AndQueryBuilder qb;
 	public void each(Function iter) {
 		dbscr.loader.searchByQuery(qb.toQueryExpression(), iter);
 	}

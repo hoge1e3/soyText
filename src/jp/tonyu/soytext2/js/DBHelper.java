@@ -37,7 +37,7 @@ public class DBHelper implements Wrappable{
 
 	public Object q(Object value) {
 		if (value instanceof String) {
-			return QueryExpressionParser.parse((String)value);
+			return new AndDBSearcher(this, QueryExpressionParser.parse((String)value));
 		} else if (value instanceof DocumentScriptable){
 			DocumentScriptable ds=(DocumentScriptable)value;
 			return new AndDBSearcher(this).is(ds.id());
