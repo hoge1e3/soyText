@@ -34,6 +34,8 @@ import jp.tonyu.soytext2.js.ContentChecker;
 import jp.tonyu.soytext2.js.DocumentLoader;
 import jp.tonyu.soytext2.js.DocumentScriptable;
 import jp.tonyu.soytext2.js.JSSession;
+import jp.tonyu.soytext2.search.QueryExpressionParser;
+import jp.tonyu.soytext2.search.expr.QueryExpression;
 import jp.tonyu.util.Literal;
 import jp.tonyu.util.MapAction;
 import jp.tonyu.util.Maps;
@@ -302,7 +304,7 @@ public class HttpContext implements Wrappable {
         }
         /*else if (s.length>=2 && s[1].equalsIgnoreCase("download")) {
         	download();
-        }
+        }*/
         else if (s.length>=2 && s[1].equalsIgnoreCase("search")) {
         	search();
         }
@@ -1101,7 +1103,7 @@ public class HttpContext implements Wrappable {
 	private boolean isAjaxRequest() {
 		return "ajax".equals( params().get("_responseType") );
 	}
-	/*private void search() throws IOException
+	private void search() throws IOException
     {
     	Map<String,String> params=params();
     	//args[2]: id of savedsearch
@@ -1113,11 +1115,11 @@ public class HttpContext implements Wrappable {
     		search(cstr,params.get("sel"));
 
     	}
-    }*/
-	/*private void search(String cstr, final String sel) throws IOException {
+    }
+	private void search(String cstr, final String sel) throws IOException {
     	if (assertRoot()) return;
     	final StringBuffer buf = new StringBuffer(isAjaxRequest() ? "" : menuBar());
-        documentLoader.search(cstr, null, new BuiltinFunc() {
+        documentLoader.searchByQuery(QueryExpressionParser.parse(cstr), new BuiltinFunc() {
         	int c=0;
 			@Override
 			public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -1131,7 +1133,7 @@ public class HttpContext implements Wrappable {
         buf.append("<BR>insts= "+SMain.insts);
     	res.setContentType (TEXT_HTML_CHARSET_UTF_8);
         Httpd.respondByString(res, buf.toString());
-	}*/
+	}
 	public String rootPath() {
     	int length=argsIncludingRom().length;
 		//  docBase()/byId/****
@@ -1171,8 +1173,8 @@ public class HttpContext implements Wrappable {
         buf.append(Html.p("<a href=%a>Login..</a>  |" , path+"/auth"));
         buf.append(Html.p("<a href=%a>Recents</a>  |" , path+"/all"));
         buf.append(Html.p("<a href=%a>New..</a> | ", path+"/new"));
-        //buf.append(Html.p("<form action=%s method=POST style=\"display: inline;\">" +
-       // 		"<input name=q value=%s></form>", path+"/search" ,q));
+        buf.append(Html.p("<form action=%s method=POST style=\"display: inline;\">" +
+        		"<input name=q value=%s></form>", path+"/search" ,q));
         //buf.append(Html.p("<a href=%a>検索</a> |\n" , path+"/search"));
         buf.append("DB: "+documentSet());
         buf.append("| Loaders: "+DocumentLoader.loaders.size());

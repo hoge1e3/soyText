@@ -21,6 +21,7 @@ import jp.tonyu.soytext2.document.LooseWriteAction;
 import jp.tonyu.soytext2.document.PairSet;
 import jp.tonyu.soytext2.file.ReadableBinData;
 import jp.tonyu.soytext2.search.QueryBuilder;
+import jp.tonyu.soytext2.search.QueryExpressionParser;
 import jp.tonyu.soytext2.search.expr.AttrOperator;
 
 import org.mozilla.javascript.Function;
@@ -36,7 +37,7 @@ public class DBHelper implements Wrappable{
 
 	public Object q(Object value) {
 		if (value instanceof String) {
-			return new AndDBSearcher(this);
+			return QueryExpressionParser.parse((String)value);
 		} else if (value instanceof DocumentScriptable){
 			DocumentScriptable ds=(DocumentScriptable)value;
 			return new AndDBSearcher(this).is(ds.id());
