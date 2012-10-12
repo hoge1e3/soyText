@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.channels.FileChannel;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class SFile implements Iterable<SFile>{
 	java.io.File f;
@@ -270,6 +271,47 @@ public class SFile implements Iterable<SFile>{
 	}
     public void delete() {
         if (f.exists()) f.delete();
+    }
+    public Iterable<SFile> recursive() {
+        return new Iterable<SFile>() {
+            @Override
+            public Iterator<SFile> iterator() {
+                return new Iterator<SFile>() {
+                    Iterator<SFile> dit=SFile.this.iterator();
+                    SFile cur=null;
+                    Iterator<SFile> curIt=null;
+                    SFile nx=null;
+                    @Override
+                    public boolean hasNext() {
+                        while (true) {
+                            if (cur==null) {
+                                if (dit.hasNext()) {
+                                    cur=dit.next();
+                                }
+                                if (cur==null) {nx=null; return false;}
+                            }
+                            if (!cur.isDir()) { nx=cur; cur=null; return true; }
+                            if (curIt==null) curIt=cur.recursive().iterator();
+                            if (curIt.hasNext()) {nx=curIt.next(); return true;}
+                            curIt=null;
+                            cur=null;
+                        }
+                    }
+                    @Override
+                    public SFile next() {
+                        if (nx==null) {
+                            if (!hasNext()) throw new NoSuchElementException();
+                        }
+                        return nx;
+                    }
+                    @Override
+                    public void remove() {
+                        // TODO 自動生成されたメソッド・スタブ
+
+                    }
+                };
+            }
+        };
     }
 
 }
