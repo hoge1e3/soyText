@@ -54,6 +54,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     public static final Pattern idpatWiki=DocumentProcessor.idpatWiki;// Pattern.compile("\\[\\[([^\\]]+)\\]\\]");
     private static final String ERROR_CONTENT="err_content";
     private static final String ERROR_MSG="err_message";
+    private static final String ROOTSKEL="root.skel";
     // final LooseTransaction looseTransaction;
     // Map<String, Scriptable>objs=new HashMap<String, Scriptable>();
     private final DocumentSet documentSet;
@@ -491,7 +492,16 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         return inherit(klass, fields);
     }
     public DocumentScriptable rootDocument() {
-        return byIdOrNull(rootDocumentId());
+        DocumentScriptable res=byIdOrNull(rootDocumentId());
+        if (res==null) {
+            res=byIdOrNull(ROOTSKEL);
+            if (res!=null) {
+                DocumentScriptable skel=res;
+                res=newDocument(rootDocumentId());
+                res.setContentAndSave(skel.getDocument().content);
+            }
+        }
+        return res;
     }
     public String rootDocumentId() {
         return "root@"+documentSet.getDBID();  // TODO: @.

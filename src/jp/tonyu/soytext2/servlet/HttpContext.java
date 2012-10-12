@@ -73,9 +73,9 @@ public class HttpContext implements Wrappable {
 		String host=req.getRemoteHost();
 		Log.d("RMTH", host);
 
-		if ("localhost".equals(addr) || "127.0.0.1".equals(addr) || "0:0:0:0:0:0:0:1".equals(addr)) {
+		/*if ("localhost".equals(addr) || "127.0.0.1".equals(addr) || "0:0:0:0:0:0:0:1".equals(addr)) {
 			return true;
-		}
+		}*/
 		//if (addr !=null && addr.length()>0 && addr.indexOf(".")<0) return true; // like my_computer
 		String user = user();
 		if (documentLoader.authenticator().isRootUser(user)) return true;
@@ -265,6 +265,26 @@ public class HttpContext implements Wrappable {
 		String[] s=args();
         Log.d(this,"pathinfo = "+req.getPathInfo());
         Log.d(this,"qstr = "+req.getQueryString());
+        DocumentScriptable root=documentLoader.rootDocument();
+        if (!isRoot()) {
+            Object permitted=ScriptableObject.getProperty(root, "permittedROMCommands");
+            boolean p=false;
+            if (s.length>=2 && permitted instanceof Scriptable) {
+                Scriptable perm=(Scriptable) permitted;
+                String cmd=s[1].toLowerCase();
+                //Log.d(this, "Perm cmd = "+cmd);
+                p=ScriptableObject.hasProperty(perm, cmd);
+                /*for (Object name: perm.getIds() ) {
+                Log.d(this, "Perm cmd name = "+name+ "   has="+ScriptableObject.hasProperty(perm, name.toString())+ " cmd = "+cmd+
+                        ScriptableObject.hasProperty(perm, cmd) );
+                }*/
+
+            }
+            if (!p) {
+                auth();
+                return;
+            }
+        }
         if (s.length == 2 && s[1].equalsIgnoreCase("auth")) {
         	auth();
         	return;
@@ -1037,7 +1057,7 @@ public class HttpContext implements Wrappable {
 		}
     }
 	private void all() throws IOException {
-        if (assertRoot()) return;
+        //if (assertRoot()) return;
         final StringBuffer buf = new StringBuffer(isAjaxRequest() ? "" : menuBar());
         documentLoader.all(new BuiltinFunc() {
             int c=0;
@@ -1117,7 +1137,7 @@ public class HttpContext implements Wrappable {
     	}
     }
 	private void search(String cstr, final String sel) throws IOException {
-    	if (assertRoot()) return;
+	    //if (assertRoot()) return;
     	final StringBuffer buf = new StringBuffer(isAjaxRequest() ? "" : menuBar());
         documentLoader.searchByQuery(QueryExpressionParser.parse(cstr), new BuiltinFunc() {
         	int c=0;
