@@ -1,0 +1,40 @@
+soyText ver 0.1
+Copyright 2012 hoge1e3[ atto ]gmail.com
+
+This product includes software developed by
+The Apache Software Foundation (http://www.apache.org/).
+
+== List of depending libraries
+
+lib/commons-fileupload-1.2.2.jar
+ URL: http://commons.apache.org/fileupload/
+
+lib/commons-io-1.4.jar:
+ URL: http://commons.apache.org/io/index.html
+
+lib/commons-ligging-1.1.1.jar
+ URL: http://commons.apache.org/logging/
+
+lib/httpcore-*-4.2.1.jar
+ URL: http://hc.apache.org/index.html
+
+lib/jsonic-1.2.7.jar
+ URL: http://jsonic.sourceforge.jp/
+
+lib/rhino_patched.jar
+ URL: http://github.com/hoge1e3/rhino_e4x_patched/
+
+lib/servlet-api.jar:
+ URL: http://tomcat.apache.org/
+
+lib/sqlite-jdbc-3.7.2.jar:
+ URL: http://www.xerial.org/trac/Xerial/wiki/SQLiteJDBC
+
+src/jp/tonyu/nanoservlet/NanoHTTPD.java
+ URL: http://elonen.iki.fi/code/nanohttpd/
+
+src/jp/tonyu/util/MD5.java
+ URL: http://www.syboos.jp/java/doc/md5-algorithm.html
+
+
+
