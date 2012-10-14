@@ -43,4 +43,7 @@ public class Auth implements Wrappable {
 		String user=(this.user==null?"nobody":this.user); //  currentSession().userName();
 		return user;
 	}
+	public boolean isRoot() {
+	    return a.isRootUser(user());
+	}
 }
