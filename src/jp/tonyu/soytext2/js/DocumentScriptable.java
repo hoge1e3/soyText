@@ -72,6 +72,7 @@ public class DocumentScriptable implements Function {
 	public static final String ONAPPLY="onApply",APPLY="apply",CALL="call";
 	private static final Object SETCONTENTANDSAVE = "setContentAndSave";
 	private static final Object GETCONTENT = "getContent";
+    private static final String DOLLAR="$";
 	static int cnt=0;
 	public DocumentRecord getDocument() {
 	    if (_d!=null) return _d;
@@ -561,7 +562,14 @@ public class DocumentScriptable implements Function {
 	@Override
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
             Object[] args) {
-		Object r=ScriptableObject.getProperty(this,ONAPPLY);
+	    Object r;
+	    r=ScriptableObject.getProperty(this,DOLLAR);
+	    if (r instanceof Function) {
+            Function f = (Function) r;
+	        return f.call(cx, scope, thisObj , args);
+	    }
+
+	    r=ScriptableObject.getProperty(this,ONAPPLY);
 		if (r instanceof Function) {
 			Function f = (Function) r;
 			Object[] args2=new Object[] { thisObj ,args };

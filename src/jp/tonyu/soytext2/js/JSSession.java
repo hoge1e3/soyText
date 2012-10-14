@@ -19,16 +19,12 @@
 package jp.tonyu.soytext2.js;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import jp.tonyu.debug.Log;
 import jp.tonyu.js.BuiltinFunc;
 import jp.tonyu.js.ContextRunnable;
-import jp.tonyu.js.Jslint;
 import jp.tonyu.js.Prototype;
-
 import jp.tonyu.js.Wrappable;
 import jp.tonyu.soytext2.document.DocumentSet;
 import jp.tonyu.soytext2.servlet.Auth;
@@ -40,7 +36,6 @@ import org.mozilla.javascript.ClassShutter;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.Function;
-import org.mozilla.javascript.NativeJavaObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -66,7 +61,7 @@ public class JSSession {
          * Log.w("Runscript","Native java Object:"+j); } } }
          */
         cx.evaluateString(o, Resource.text(Prototype.class, ".js"), "<prototype>", 1, null);
-        cx.evaluateString(o, Resource.text(Jslint.class, ".js"), "<jslint>", 1, null);
+        //cx.evaluateString(o, Resource.text(Jslint.class, ".js"), "<jslint>", 1, null);
         cx.evaluateString(o, Resource.text(HashLiteralConv.class, ".js"), "<hashLiteral>", 1, null);
         ScriptableObject.putProperty(o, "session", o);
         return o;

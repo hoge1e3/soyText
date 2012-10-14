@@ -36,5 +36,9 @@ src/jp/tonyu/nanoservlet/NanoHTTPD.java
 src/jp/tonyu/util/MD5.java
  URL: http://www.syboos.jp/java/doc/md5-algorithm.html
 
+src/jp/tonyu/js/Prototype.js
+ URL: http://www.prototypejs.org/
+ (Modified to soyText; remove DOM functions)
 
-
+src/jp/tonyu/soytext2/browserjs/JQuery.js
+ URL: http://jquery.com/
