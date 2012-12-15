@@ -39,7 +39,7 @@ public class JarDownloader {
 		if (jarFile.get().length()==0) Log.die("jar file not set");
 		SFile inputJarFile=new SFile(jarFile.get());
 		File outDbF=File.createTempFile("main.tmp",".db");
-		final SDB outdb=new SDB(outDbF);
+		final SDB outdb=new SDB(outDbF ,dbid);
 		outdb.writeTransaction(new WriteAction() {
             @Override
             public void run(JDBCHelper jdbcHelper) throws NotInWriteTransactionException, SQLException {

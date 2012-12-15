@@ -222,8 +222,8 @@ public class SMain extends HttpServlet {
 		return dbFile.javaIOFile();
 	}*/
 	// As Application
-	public SMain(int port) throws Exception{
-		workspace=new Workspace(new SFile("soytext"));
+	public SMain(SFile workspaceF, int port) throws Exception{
+		workspace=new Workspace(workspaceF);
 		//workspaceDir=new SFile(new File("."));
 		workspace.setupDB();
 		//File newest = getNewestDBFile();
@@ -257,13 +257,18 @@ public class SMain extends HttpServlet {
 		System.exit(1);
 	}
 	public static void main(String[] args) throws Exception {
+        SFile wf=new SFile("soytext");
+        if (args.length>0) {
+            wf=new SFile(args[0]);
+        }
+        if (!wf.exists()) {
+            System.out.println("Directory '"+wf+"' not found.");
+            System.exit(1);
+        }
 		int port=3010;
-		if (args.length>0) {
-			//System.err.println("Usage: java SMain port");
-			//System.err.println("uid must be world-unique id such as UUID, time.domain or some string that google returns 0 results.");
-			//return;
-			port=Integer.parseInt(args[0]);
+		if (args.length>1) {
+			port=Integer.parseInt(args[1]);
 		}
-		new SMain(port );
+		new SMain(wf, port );
 	}
 }

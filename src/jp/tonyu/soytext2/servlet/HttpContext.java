@@ -1006,7 +1006,7 @@ public class HttpContext implements Wrappable {
 	    			res.sendRedirect(rootPath()+"/");
 	    		}
 			} else {
-				msg="ユーザ名、パスワードが間違っています。";
+				msg="Login incorrect";
 			}
 			/*if ("logout".equals(user)) {
 				user="";
@@ -1034,8 +1034,8 @@ public class HttpContext implements Wrappable {
     		String after=params().get("after");
 		    if (after!=null) aft=Html.p("<input type=hidden name=after value=%a/>",after);
 			Httpd.respondByString(res, msg+"<form action=\"./auth\" method=\"POST\">"+
-    				"ユーザ名： <input name=\"user\" value=\""+user+"\"><br/>"+
-    				"パスワード: <input type=\"password\" name=\"pass\">"+
+    				"Username： <input name=\"user\" value=\""+user+"\"><br/>"+
+    				"Password: <input type=\"password\" name=\"pass\">"+
     				aft+
     				"<br><input type=submit>"+
     				"</form>"

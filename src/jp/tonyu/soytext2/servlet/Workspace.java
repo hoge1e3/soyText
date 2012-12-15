@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+import jp.tonyu.debug.Log;
 import jp.tonyu.soytext2.document.SDB;
 import jp.tonyu.util.SFile;
 
@@ -50,7 +51,7 @@ public class Workspace {
 		SFile db=singleDBHome(dbid);
 		if (!db.exists()) return null;
 		SFile f=db.rel(MAIN_DB);
-		return dbFromFile(f);
+		return dbFromFile(f,dbid);
 	}
 	public SDB getPrimaryDB() throws SQLException,IOException, ClassNotFoundException {
 		/*SFile f=dbHome().rel(getPrimaryDBID());
@@ -58,11 +59,11 @@ public class Workspace {
 		return getDB(getPrimaryDBID());
 	}
 	static Map<File, SDB> cache=new HashMap<File, SDB>();
-	private SDB dbFromFile(SFile f) throws SQLException, ClassNotFoundException {
+	private SDB dbFromFile(SFile f,String dbid) throws SQLException, ClassNotFoundException {
 		File ff=f.javaIOFile();
 		SDB res=cache.get(ff);
 		if (res!=null) return res;
-		res=new SDB(ff);
+		res=new SDB(ff,dbid);
 		cache.put(ff, res);
 		return res;
 	}
@@ -81,6 +82,7 @@ public class Workspace {
 		ClassLoader cl=this.getClass().getClassLoader();
 		//SFile dbIdFile=dbDir.rel(SDB.PRIMARY_DBID_TXT);
 		InputStream in=cl.getResourceAsStream(DB_INIT_PATH+"/"+PRIMARY_DBID_TXT);
+		if (in==null) Log.die("Database folder did not set up");
 		Scanner s=new Scanner(in);
 		String primaryDbid=s.nextLine();
 		s.close();

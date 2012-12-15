@@ -45,9 +45,8 @@ public class NanoServlet extends NanoHTTPD {
 	}
 	boolean stopped=false;
 	@Override
-	public Response serve(String uri, String method, Properties header,
-			Properties parms, Properties files) {
-		HttpServletRequest req=new RequestWrapper(uri, method,	 header, parms , files);
+	public Response serve(HttpServletRequest req) {
+	    //HttpServletRequest req=new RequestWrapper(uri, method,	 header, parms , files);
 		ResponseWrapper res = new ResponseWrapper(this);
 		try {
 			if (stopped) {

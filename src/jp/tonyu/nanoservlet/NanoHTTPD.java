@@ -8,13 +8,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URLEncoder;
+import java.security.Principal;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -24,6 +27,17 @@ import java.util.TimeZone;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
+
+import javax.management.RuntimeErrorException;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import jp.tonyu.js.Wrappable;
+import jp.tonyu.soytext2.file.FileProperty;
 
 /**
  * A simple, tiny, nicely embeddable HTTP 1.0 server in Java
@@ -65,7 +79,7 @@ import java.io.FileOutputStream;
  * See the end of the source file for distribution license
  * (Modified BSD licence)
  */
-public class NanoHTTPD
+public abstract class NanoHTTPD
 {
 	// ==================================================
 	// API parts
@@ -82,7 +96,8 @@ public class NanoHTTPD
 	 * @param header	Header entries, percent decoded
 	 * @return HTTP response, see class Response for details
 	 */
-	public Response serve( String uri, String method, Properties header, Properties parms, Properties files )
+	public abstract Response serve( HttpServletRequest req);
+	/* String uri, String method, Properties header, Properties parms, Properties files )
 	{
 		System.out.println( method + " '" + uri + "' " );
 
@@ -109,7 +124,7 @@ public class NanoHTTPD
 		}
 
 		return serveFile( uri, header, new File("."), true );
-	}
+	}*/
 
 	/**
 	 * HTTP response.
@@ -251,7 +266,7 @@ public class NanoHTTPD
 	/**
 	 * Starts as a standalone file server and waits for Enter.
 	 */
-	public static void main( String[] args )
+	/*public static void main( String[] args )
 	{
 		System.out.println( "NanoHTTPD 1.21 (C) 2001,2005-2011 Jarno Elonen and (C) 2010 Konstantinos Togias\n" +
 							"(Command line options: [port] [--licence])\n" );
@@ -286,7 +301,7 @@ public class NanoHTTPD
 		System.out.println( "Hit Enter to stop.\n" );
 
 		try { System.in.read(); } catch( Throwable t ) {}
-	}
+	}*/
 	public static final String ENTIRE_QUERY_STRING = "ENTIRE_QUERY_STRING";
 
 	public static final String REMOTE_HOST = "__remote_host";
@@ -307,6 +322,337 @@ public class NanoHTTPD
 			t.start();
 		}
 
+		public class RequestWrapper2 implements HttpServletRequest,Wrappable {
+		    String uri;
+		    String method;
+		    Properties header;
+		    Properties parms;
+		    Properties files;
+		    byte [] fbuf;
+		    public RequestWrapper2(String uri, String method, Properties header,
+		            Properties parms, Properties files, byte[] fbuf) {
+		        super();
+		        this.uri = uri;
+		        this.method = method;
+		        this.header = header;
+		        this.parms = parms;
+		        this.files = files;
+		        this.fbuf=fbuf;
+		    }
+		    public void notimpl() {
+		    	for (Object key: header.keySet()) {
+		    		System.out.println("header."+key+"="+header.getProperty((String) key));
+		    	}
+		        throw new RuntimeException("Not implemented");
+		    }
+		    @Override
+		    public String getAuthType() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getContextPath() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public Cookie[] getCookies() {
+		        String c=header.getProperty("cookie");
+		        if (c==null) return new Cookie[0];
+		        String[] cs = c.split(";");
+		        Cookie[] res=new Cookie[cs.length];
+		        int i=0;
+		        for (String e:cs) {
+		            String[] kv=e.split("=");
+		            res[i]=new Cookie(kv[0].trim(), kv[1].trim());
+		            i++;
+		        }
+		        return res;
+		    }
+		    @Override
+		    public long getDateHeader(String arg0) {
+		        // TODO: いいかげん
+		        return 0;
+		    }
+		    @Override
+		    public String getHeader(String arg0) {
+		        return header.getProperty(arg0);
+		    }
+		    @Override
+		    public Enumeration getHeaderNames() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public Enumeration getHeaders(String arg0) {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public int getIntHeader(String arg0) {
+		        notimpl();
+		        return 0;
+		    }
+		    @Override
+		    public String getMethod() {
+		        return method;
+		    }
+		    @Override
+		    public String getPathInfo() {
+		        return uri;
+		    }
+		    @Override
+		    public String getPathTranslated() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getQueryString() {
+		        return getParameter(NanoHTTPD.ENTIRE_QUERY_STRING);
+		    }
+		    @Override
+		    public String getRemoteUser() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getRequestURI() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public StringBuffer getRequestURL() {
+		        return new StringBuffer(uri);
+		    }
+		    @Override
+		    public String getRequestedSessionId() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getServletPath() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public HttpSession getSession() {
+		        return SingletonHttpSession.inst;
+		    }
+		    @Override
+		    public HttpSession getSession(boolean arg0) {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public Principal getUserPrincipal() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public boolean isRequestedSessionIdFromCookie() {
+		        notimpl();
+		        return false;
+		    }
+		    @Override
+		    public boolean isRequestedSessionIdFromURL() {
+		        notimpl();
+		        return false;
+		    }
+		    @Override
+		    public boolean isRequestedSessionIdFromUrl() {
+		        notimpl();
+		        return false;
+		    }
+		    @Override
+		    public boolean isRequestedSessionIdValid() {
+		        notimpl();
+		        return false;
+		    }
+		    @Override
+		    public boolean isUserInRole(String arg0) {
+		        notimpl();
+		        return false;
+		    }
+		    @Override
+		    public Object getAttribute(String arg0) {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public Enumeration getAttributeNames() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getCharacterEncoding() {
+		        return "utf-8";
+		    }
+		    @Override
+		    public int getContentLength() {
+		        return  Integer.parseInt( header.getProperty("content-length") );
+		    }
+		    @Override
+		    public String getContentType() {
+		        return getHeader("content-type");
+		    }
+		    @Override
+		    public ServletInputStream getInputStream() throws IOException {
+                final ByteArrayInputStream bin = new ByteArrayInputStream(fbuf);
+		        return new ServletInputStream() {
+                    @Override
+                    public int read() throws IOException {
+                        return bin.read();
+                    }
+                    @Override
+                    public int read(byte[] b, int off, int len) throws IOException {
+                        return bin.read(b, off, len);
+                    }
+                };
+		    }
+		    @Override
+		    public String getLocalAddr() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getLocalName() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public int getLocalPort() {
+		        notimpl();
+		        return 0;
+		    }
+		    @Override
+		    public Locale getLocale() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public Enumeration getLocales() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getParameter(String arg0) {
+		        try {
+                    parseBody();
+                    return parms.getProperty(arg0);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+		    }
+		    boolean bodyParsed=false;
+		    private void parseBody() throws InterruptedException, IOException {
+		        // void parseBody(Properties parms, Properties header, Properties files, String method,
+		        //                byte[] fbuf, ByteArrayInputStream bin) throws InterruptedException, IOException {
+		        if (bodyParsed) return;
+		        bodyParsed=true;
+		        HTTPSession.this.parseBody(parms, header, files, method, fbuf, (InputStream)getInputStream());
+            }
+            @Override
+		    public Map getParameterMap() {
+                try {
+                    parseBody();
+                    Map res=new Hashtable();
+                    for (Object key:parms.keySet()) {
+                        if (NanoHTTPD.ENTIRE_QUERY_STRING.equals(key)) continue;
+                        String value=parms.getProperty((String)key);
+                        res.put(key, new String[]{value});
+                    }
+                    return res;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+            }
+		    @Override
+		    public Enumeration getParameterNames() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String[] getParameterValues(String arg0) {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getProtocol() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public BufferedReader getReader() throws IOException {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getRealPath(String arg0) {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getRemoteAddr() {
+		        //notimpl();
+		        return "localhost";//header.getProperty(NanoHTTPD.REMOTE_ADDR);
+		    }
+		    @Override
+		    public String getRemoteHost() {
+		        //notimpl();
+		        return "localhost";//header.getProperty(NanoHTTPD.REMOTE_HOST);
+		    }
+		    @Override
+		    public int getRemotePort() {
+		        notimpl();
+		        return 0;
+		    }
+		    @Override
+		    public RequestDispatcher getRequestDispatcher(String arg0) {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getScheme() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public String getServerName() {
+		        notimpl();
+		        return null;
+		    }
+		    @Override
+		    public int getServerPort() {
+		        notimpl();
+		        return 0;
+		    }
+		    @Override
+		    public boolean isSecure() {
+		        notimpl();
+		        return false;
+		    }
+		    @Override
+		    public void removeAttribute(String arg0) {
+		        notimpl();
+		    }
+		    @Override
+		    public void setAttribute(String arg0, Object arg1) {
+		        notimpl();
+		    }
+		    @Override
+		    public void setCharacterEncoding(String arg0)
+		            throws UnsupportedEncodingException {
+		        //TODO UTF-8固定
+		    }
+		}
 		public void run()
 		{
 			try
@@ -392,58 +738,17 @@ public class NanoHTTPD
 				byte [] fbuf = f.toByteArray();
 
 				// Create a BufferedReader for easily reading it as string.
-				ByteArrayInputStream bin = new ByteArrayInputStream(fbuf);
-				BufferedReader in = new BufferedReader( new InputStreamReader(bin));
 
-				// If the method is POST, there may be parameters
-				// in data section, too, read it:
-				if ( method.equalsIgnoreCase( "POST" ))
-				{
-					String contentType = "";
-					String contentTypeHeader = header.getProperty("content-type");
-					StringTokenizer st = new StringTokenizer( contentTypeHeader , "; " );
-					if ( st.hasMoreTokens()) {
-						contentType = st.nextToken();
-					}
+				HttpServletRequest req=new RequestWrapper2(uri, method, header, parms, files, fbuf);
 
-					if (contentType.equalsIgnoreCase("multipart/form-data"))
-					{
-						// Handle multipart/form-data
-						if ( !st.hasMoreTokens())
-							sendError( HTTP_BADREQUEST, "BAD REQUEST: Content type is multipart/form-data but boundary missing. Usage: GET /example/file.html" );
-						String boundaryExp = st.nextToken();
-						st = new StringTokenizer( boundaryExp , "=" );
-						if (st.countTokens() != 2)
-							sendError( HTTP_BADREQUEST, "BAD REQUEST: Content type is multipart/form-data but boundary syntax error. Usage: GET /example/file.html" );
-						st.nextToken();
-						String boundary = st.nextToken();
-
-						decodeMultipartData(boundary, fbuf, in, parms, files);
-					}
-					else
-					{
-						// Handle application/x-www-form-urlencoded
-						String postLine = "";
-						char pbuf[] = new char[512];
-						int read = in.read(pbuf);
-						while ( read >= 0 && !postLine.endsWith("\r\n") )
-						{
-							postLine += String.valueOf(pbuf, 0, read);
-							read = in.read(pbuf);
-						}
-						postLine = postLine.trim();
-						decodeParms( postLine, parms );
-					}
-				}
 
 				// Ok, now do the serve()
-				Response r = serve( uri, method, header, parms, files );
+				Response r = serve( req); // uri, method, header, parms, files );
 				if ( r == null )
 					sendError( HTTP_INTERNALERROR, "SERVER INTERNAL ERROR: Serve() returned a null response." );
 				else
 					sendResponse( r.status, r.mimeType, r.header, r.data );
 
-				in.close();
 				is.close();
 			}
 			catch ( IOException ioe )
@@ -459,6 +764,53 @@ public class NanoHTTPD
 				// Thrown by sendError, ignore and exit the thread.
 			}
 		}
+
+        void parseBody(Properties parms, Properties header, Properties files, String method,
+                byte[] fbuf, InputStream bin) throws InterruptedException, IOException {
+            BufferedReader in = new BufferedReader( new InputStreamReader(bin));
+
+            // If the method is POST, there may be parameters
+            // in data section, too, read it:
+            if ( method.equalsIgnoreCase( "POST" ))
+            {
+            	String contentType = "";
+            	String contentTypeHeader = header.getProperty("content-type");
+            	StringTokenizer st = new StringTokenizer( contentTypeHeader , "; " );
+            	if ( st.hasMoreTokens()) {
+            		contentType = st.nextToken();
+            	}
+
+            	if (contentType.equalsIgnoreCase("multipart/form-data"))
+            	{
+            		// Handle multipart/form-data
+            		if ( !st.hasMoreTokens())
+            			sendError( HTTP_BADREQUEST, "BAD REQUEST: Content type is multipart/form-data but boundary missing. Usage: GET /example/file.html" );
+            		String boundaryExp = st.nextToken();
+            		st = new StringTokenizer( boundaryExp , "=" );
+            		if (st.countTokens() != 2)
+            			sendError( HTTP_BADREQUEST, "BAD REQUEST: Content type is multipart/form-data but boundary syntax error. Usage: GET /example/file.html" );
+            		st.nextToken();
+            		String boundary = st.nextToken();
+
+            		decodeMultipartData(boundary, fbuf, in, parms, files);
+            	}
+            	else
+            	{
+            		// Handle application/x-www-form-urlencoded
+            		String postLine = "";
+            		char pbuf[] = new char[512];
+            		int read = in.read(pbuf);
+            		while ( read >= 0 && !postLine.endsWith("\r\n") )
+            		{
+            			postLine += String.valueOf(pbuf, 0, read);
+            			read = in.read(pbuf);
+            		}
+            		postLine = postLine.trim();
+            		decodeParms( postLine, parms );
+            	}
+            }
+            in.close();
+        }
 
 		/**
 		 * Decodes the sent headers and loads the data into

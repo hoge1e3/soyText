@@ -19,6 +19,7 @@
 package jp.tonyu.soytext2.command;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashSet;
 
@@ -31,8 +32,9 @@ import jp.tonyu.soytext2.document.IndexRecord;
 import jp.tonyu.soytext2.document.SDB;
 
 public class CheckDupIndex {
-	public static void main(String[] args) throws SQLException, ClassNotFoundException, NotInReadTransactionException {
-		final SDB sdb=new SDB(new File(args[0]));
+	public static void main(String[] args) throws SQLException, ClassNotFoundException, NotInReadTransactionException, IOException {
+	    Common.parseArgs(args);
+		final SDB sdb=Common.workspace.getDB(Common.dbid );
 		final HashSet<String> chk=new HashSet<String>();
 		sdb.readTransaction(new ReadAction() {
 			@Override

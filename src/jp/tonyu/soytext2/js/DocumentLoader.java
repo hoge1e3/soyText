@@ -264,6 +264,19 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     public JSSession jsSession() {
         return jsSession; // JSSession.cur.get();
     }
+    private DocumentScriptable newDocument(final String id, final String owner) {
+        final Ref<DocumentScriptable> res=Ref.create(null);
+        ltr.write(new LooseWriteAction() {
+            @Override
+            public void run() throws NotInWriteTransactionException {
+                DocumentRecord d=getDocumentSet().newDocument(id);
+                d.owner=owner;
+                res.set(defaultDocumentScriptable(d));
+            }
+        });
+        return res.get();
+    }
+
     public DocumentScriptable newDocument(final String id) {
         final Ref<DocumentScriptable> res=Ref.create(null);
         ltr.write(new LooseWriteAction() {
@@ -515,7 +528,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             res=byIdOrNull(ROOTSKEL);
             if (res!=null) {
                 DocumentScriptable skel=res;
-                res=newDocument(rootDocumentId());
+                res=newDocument(rootDocumentId() ,res.getDocument().owner );
                 res.setContentAndSave(skel.getDocument().content);
             }
         }

@@ -41,7 +41,7 @@ public class ZipMaker implements Wrappable {
         zout.putNextEntry(zipEntry);
         SFile.redirect(data, zout);
     }
-	public void add(String path, BinData data) throws IOException {
+	public void add(String path, ReadableBinData data) throws IOException {
 		ZipEntry zipEntry = new ZipEntry(path);
 		zout.putNextEntry(zipEntry);
 		SFile.redirect(data.getInputStream(), zout);

@@ -331,5 +331,11 @@ public class SFile implements Iterable<SFile>{
             }
         };
     }
+    // base.rel(unrel(base))==this
+    public String unrel(SFile base) {
+        String s=fullPath().substring(base.fullPath().length());
+        for (;s.startsWith(File.separatorChar+""); s=s.substring(1));
+        return s;
+    }
 
 }

@@ -132,7 +132,7 @@ public class SDB implements DocumentSet {
     SFile homeDir;
     public static Map<File, SDB> insts=new HashMap<File, SDB>();
     public static int instc=0;
-    public SDB(File file /* , String uid */) throws SQLException, ClassNotFoundException {
+    public SDB(File file , String dbid) throws SQLException, ClassNotFoundException {
         Log.d(this, "DB file="+file);
         // looseTransaction=new LooseTransaction(this);
         Class.forName("org.sqlite.JDBC");
@@ -157,18 +157,14 @@ public class SDB implements DocumentSet {
                 idxSeq=new PrimaryKeySequence(indexTable());
             }
         });
-        dbid=getDBIDFromFile(new SFile(file.getAbsoluteFile()));
+        this.dbid=dbid;//getDBIDFromFile(new SFile(file.getAbsoluteFile()));
         instc++;
         insts.put(file, this);
     }
     Pattern dbidPat=Pattern.compile("\\w*\\.\\w+\\.");
-    private String getDBIDFromFile(SFile file) {
+    /*private String getDBIDFromFile(SFile file) {
         try {
             SFile parent=file.parent();
-            /*
-             * SFile primaryDBID=parent.rel(PRIMARY_DBID_TXT); if
-             * (primaryDBID.exists()) { return primaryDBID.text(); }
-             */
             Matcher m=dbidPat.matcher(parent.name());
             if (m.lookingAt())
                 return parent.name();
@@ -180,7 +176,7 @@ public class SDB implements DocumentSet {
             e.printStackTrace();
         }
         return null;
-    }
+    }*/
     public SFile getBlobDir() {
         return blobDir;
     }

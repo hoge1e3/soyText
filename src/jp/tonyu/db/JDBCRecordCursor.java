@@ -47,14 +47,14 @@ import jp.tonyu.debug.Log;
 
 public class JDBCRecordCursor<T extends JDBCRecord> implements ResultSet,Iterable<T> {
 /*
-#ifdef jdk7
+//#ifdef jdk7
     public <T> T getObject(int arg0, Class<T> arg1) throws SQLException {
         return cur.getObject(arg0, arg1);
     }
     public <T> T getObject(String arg0, Class<T> arg1) throws SQLException {
         return cur.getObject(arg0, arg1);
     }
-#endif
+//#endif
 */
 	ResultSet cur;
 	T record;

@@ -24,6 +24,7 @@ import java.util.Map;
 import jp.tonyu.debug.Log;
 import jp.tonyu.js.BuiltinFunc;
 import jp.tonyu.js.ContextRunnable;
+import jp.tonyu.js.Jslint;
 import jp.tonyu.js.Prototype;
 import jp.tonyu.js.Wrappable;
 import jp.tonyu.soytext2.document.DocumentSet;
@@ -61,7 +62,7 @@ public class JSSession {
          * Log.w("Runscript","Native java Object:"+j); } } }
          */
         cx.evaluateString(o, Resource.text(Prototype.class, ".js"), "<prototype>", 1, null);
-        //cx.evaluateString(o, Resource.text(Jslint.class, ".js"), "<jslint>", 1, null);
+        cx.evaluateString(o, Resource.text(Jslint.class, ".js"), "<jslint>", 1, null);
         cx.evaluateString(o, Resource.text(HashLiteralConv.class, ".js"), "<hashLiteral>", 1, null);
         ScriptableObject.putProperty(o, "session", o);
         return o;
@@ -93,6 +94,7 @@ public class JSSession {
         ScriptableObject.putProperty(utils, "bindings", bindings);
         ScriptableObject.putProperty(utils, "contentChecker", newContentChecker);
         ScriptableObject.putProperty(utils, "auth", auth);
+        eval("jslint", "JSLINT('var a=3;');");
         ObjectSealer.sealAll(root);
         Context.exit();
     }

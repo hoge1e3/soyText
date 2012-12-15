@@ -63,19 +63,19 @@ public class ResponseWrapper implements HttpServletResponse,Wrappable {
 	@Override
 	public void addDateHeader(String arg0, long arg1) {
 		notimpl();
-		
+
 	}
 
 	@Override
 	public void addHeader(String arg0, String arg1) {
 		notimpl();
-		
+
 	}
 
 	@Override
 	public void addIntHeader(String arg0, int arg1) {
 		notimpl();
-		
+
 	}
 
 	@Override
@@ -111,25 +111,27 @@ public class ResponseWrapper implements HttpServletResponse,Wrappable {
 	@Override
 	public void sendError(int arg0) throws IOException {
 		notimpl();
-		
+
 	}
 
 	@Override
 	public void sendError(int arg0, String arg1) throws IOException {
 		notimpl();
-		
+
 	}
 
 	@Override
 	public void sendRedirect(String value) throws IOException {
 		res.header.put("Location", value);
+		res.header.put("Pragma", "no-cache");
+        res.header.put("Cache-Control", "no-cache");
 		setStatus(301);
 	}
 
 	@Override
 	public void setDateHeader(String arg0, long arg1) {
 		notimpl();
-		
+
 	}
 
 	@Override
@@ -140,7 +142,7 @@ public class ResponseWrapper implements HttpServletResponse,Wrappable {
 	@Override
 	public void setIntHeader(String arg0, int arg1) {
 		notimpl();
-		
+
 	}
 /*HTTP_OK = "200 OK",
 		HTTP_REDIRECT = "301 Moved Permanently",
@@ -158,20 +160,20 @@ public class ResponseWrapper implements HttpServletResponse,Wrappable {
 		case 404: res.status=NanoHTTPD.HTTP_NOTFOUND;break;
 		case 400: res.status=NanoHTTPD.HTTP_BADREQUEST;break;
 		case 500: res.status=NanoHTTPD.HTTP_INTERNALERROR;break;
-		case 501: res.status=NanoHTTPD.HTTP_NOTIMPLEMENTED;break;		
+		case 501: res.status=NanoHTTPD.HTTP_NOTIMPLEMENTED;break;
 		}
 	}
 
 	@Override
 	public void setStatus(int arg0, String arg1) {
 		notimpl();
-		
+
 	}
 
 	@Override
 	public void flushBuffer() throws IOException {
 		notimpl();
-		
+
 	}
 
 	@Override
@@ -220,7 +222,7 @@ public class ResponseWrapper implements HttpServletResponse,Wrappable {
 				//System.out.println("Write3!");
 				bout.write(b);
 			}
-			
+
 
 			@Override
 			public void close() throws IOException {
@@ -247,31 +249,31 @@ public class ResponseWrapper implements HttpServletResponse,Wrappable {
 	@Override
 	public void reset() {
 		notimpl();
-		
+
 	}
 
 	@Override
 	public void resetBuffer() {
 		notimpl();
-		
+
 	}
 
 	@Override
 	public void setBufferSize(int arg0) {
 		notimpl();
-		
+
 	}
 
 	@Override
 	public void setCharacterEncoding(String arg0) {
 		notimpl();
-		
+
 	}
 
 	@Override
 	public void setContentLength(int arg0) {
 		notimpl();
-		
+
 	}
 
 	@Override
@@ -283,7 +285,7 @@ public class ResponseWrapper implements HttpServletResponse,Wrappable {
 	@Override
 	public void setLocale(Locale arg0) {
 		notimpl();
-		
+
 	}
-	
+
 }
