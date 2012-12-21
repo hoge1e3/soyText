@@ -223,7 +223,9 @@ public class SFile implements Iterable<SFile>{
 	}
 	public boolean moveTo(SFile dest) {
 		if (dest.exists()) return false;
-		if (isDir()) throw new RuntimeException("Dir is not supported");
+		if (isDir()) {
+			return f.renameTo(dest.javaIOFile());
+		}
 		dest.mkdirs(false);
 		boolean res=moveTo(dest.javaIOFile());
 		if (!res) {

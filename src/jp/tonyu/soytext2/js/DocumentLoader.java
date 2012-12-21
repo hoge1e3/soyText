@@ -72,7 +72,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     public static final Pattern idpatWiki=DocumentProcessor.idpatWiki;// Pattern.compile("\\[\\[([^\\]]+)\\]\\]");
     private static final String ERROR_CONTENT="err_content";
     private static final String ERROR_MSG="err_message";
-    private static final String ROOTSKEL="root.skel";
+
     // final LooseTransaction looseTransaction;
     // Map<String, Scriptable>objs=new HashMap<String, Scriptable>();
     private final DocumentSet documentSet;
@@ -264,7 +264,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     public JSSession jsSession() {
         return jsSession; // JSSession.cur.get();
     }
-    private DocumentScriptable newDocument(final String id, final String owner) {
+    /*private DocumentScriptable newDocument(final String id, final String owner) {
         final Ref<DocumentScriptable> res=Ref.create(null);
         ltr.write(new LooseWriteAction() {
             @Override
@@ -275,7 +275,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             }
         });
         return res.get();
-    }
+    }*/
 
     public DocumentScriptable newDocument(final String id) {
         final Ref<DocumentScriptable> res=Ref.create(null);
@@ -524,14 +524,14 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     }
     public DocumentScriptable rootDocument() {
         DocumentScriptable res=byIdOrNull(rootDocumentId());
-        if (res==null) {
+        /*if (res==null) {
             res=byIdOrNull(ROOTSKEL);
             if (res!=null) {
                 DocumentScriptable skel=res;
                 res=newDocument(rootDocumentId() ,res.getDocument().owner );
                 res.setContentAndSave(skel.getDocument().content);
             }
-        }
+        }*/
         return res;
     }
     public String rootDocumentId() {

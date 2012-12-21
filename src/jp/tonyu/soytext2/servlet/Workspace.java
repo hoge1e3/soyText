@@ -19,6 +19,7 @@
 package jp.tonyu.soytext2.servlet;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -38,6 +39,10 @@ public class Workspace {
 	public Workspace(SFile home) {
 		super();
 		this.home = home;
+	}
+	public boolean isSkel() {
+	    if (primaryDBFile().exists()) return false;
+	    return multiDBHome().rel("skel").isDir();
 	}
 	public SFile multiDBHome() {
 		SFile res=home.rel("db");
@@ -111,5 +116,8 @@ public class Workspace {
 		cache.remove(getDBFile(dbid).javaIOFile());
 
 	}
+    public void setPrimaryDBID(String dbid) throws FileNotFoundException {
+        primaryDBFile().text(dbid);
+    }
 
 }

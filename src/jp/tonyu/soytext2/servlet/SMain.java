@@ -50,17 +50,25 @@ public class SMain extends HttpServlet {
 		doIt(req,res);
 	}
 
-	private void doIt(final HttpServletRequest req2, final HttpServletResponse res2) {
+	private void doIt(final HttpServletRequest req2, final HttpServletResponse res2) throws ServletException, IOException {
+	    if (workspace.isSkel()) {
+            try {
+				new Setupper(workspace).doIt(req2,res2);
+    		} catch (SQLException e1) {
+                throw new ServletException(e1);
+    		} catch (ClassNotFoundException e) {
+                throw new ServletException(e);
+            }
+            return ;
+	    }
 		final HttpServletRequest req=wrapRequest(req2);
 		final HttpServletResponse res=wrapResponse(res2);
 		try {
 			initServlet();
 		} catch (SQLException e1) {
-			e1.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+            throw new ServletException(e1);
 		} catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            throw new ServletException(e);
         }
 		//HttpSession s=req2.getSession();
 		/*For one docloader per session
@@ -73,7 +81,13 @@ public class SMain extends HttpServlet {
 		docLoader=(DocumentLoader)jsl;*/
 		// For single docloader
 		if (docLoader==null) {
-			docLoader=new DocumentLoader(sdb);
+			try {
+                docLoader=new DocumentLoader(getSDB());
+            } catch (SQLException e) {
+                throw new ServletException(e);
+            } catch (ClassNotFoundException e) {
+                throw new ServletException(e);
+            }
 		}
 		HttpSession s = req2.getSession();
 		Object aa=s.getAttribute(AUTH2);
@@ -198,8 +212,8 @@ public class SMain extends HttpServlet {
 		/*File newest =  getNewestDBFile();
 		if (newest==null) Log.die("Error no db file exitst in "+dbDir());
 		System.out.println("Using "+newest+" as db.");*/
-		sdb= workspace.getPrimaryDB(); // new SDB(newest);//, SDB.UID_EXISTENT_FILE);
-		System.out.println("Using "+sdb+" as db.");
+		//sdb= workspace.getPrimaryDB(); // new SDB(newest);//, SDB.UID_EXISTENT_FILE);
+		//System.out.println("Using "+sdb+" as db.");
 		//loader=new DocumentLoader(sdb);
 	}
 	/*File setupDB() throws IOException {
@@ -221,15 +235,21 @@ public class SMain extends HttpServlet {
 		}
 		return dbFile.javaIOFile();
 	}*/
+	private SDB getSDB() throws SQLException, IOException, ClassNotFoundException {
+	    if (sdb!=null) return sdb;
+        sdb=workspace.getPrimaryDB();//  new SDB(newest);//, uid);
+        System.out.println("Using "+sdb+" as db.");
+        return sdb;
+	}
 	// As Application
 	public SMain(SFile workspaceF, int port) throws Exception{
 		workspace=new Workspace(workspaceF);
 		//workspaceDir=new SFile(new File("."));
-		workspace.setupDB();
+		//workspace.setupDB();
 		//File newest = getNewestDBFile();
 		//if (newest==null) newest=setupDB();
-		sdb=workspace.getPrimaryDB();//  new SDB(newest);//, uid);
-		System.out.println("Using "+sdb+" as db.");
+
+
 		jarFile="";
 		//loader=new DocumentLoader(sdb);
 		//int port = 3002;
@@ -252,7 +272,7 @@ public class SMain extends HttpServlet {
  			if (n.hasToBeStopped()) break;
  		}
  		//try { System.in.read(); } catch( Throwable t ) {};
-		sdb.close();
+		if (sdb!=null) sdb.close();
 		n.stop();
 		System.exit(1);
 	}

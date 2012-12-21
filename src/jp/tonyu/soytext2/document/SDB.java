@@ -572,10 +572,19 @@ public class SDB implements DocumentSet {
         out.close();
         return backupedIDs;
     }
+    private static final String ROOTSKEL="root.skel";
     public void restoreFromNewestJSON() throws IOException, SQLException {
         SFile src=newestBackupFile();
         InputStream in=src.inputStream();
         Map b=(Map) JSON.decode(in);
+        List<Map<String,Object>> docs=(List)b.get(new DocumentRecord().tableName());
+        for (Map<String,Object> doc:docs) {
+        	if (doc.get("id").equals(ROOTSKEL)) {
+        		String newID="root@"+dbid;     // TODO: @.
+        		doc.put("id", newID);
+        		break;
+        	}
+        }
         in.close();
         restore(b);
     }
