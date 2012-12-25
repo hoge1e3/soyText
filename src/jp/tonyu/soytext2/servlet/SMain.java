@@ -51,6 +51,13 @@ public class SMain extends HttpServlet {
 	}
 
 	private void doIt(final HttpServletRequest req2, final HttpServletResponse res2) throws ServletException, IOException {
+		try {
+			initServlet();
+		} catch (SQLException e1) {
+            throw new ServletException(e1);
+		} catch (ClassNotFoundException e) {
+            throw new ServletException(e);
+        }
 	    if (workspace.isSkel()) {
             try {
 				new Setupper(workspace).doIt(req2,res2);
@@ -63,13 +70,6 @@ public class SMain extends HttpServlet {
 	    }
 		final HttpServletRequest req=wrapRequest(req2);
 		final HttpServletResponse res=wrapResponse(res2);
-		try {
-			initServlet();
-		} catch (SQLException e1) {
-            throw new ServletException(e1);
-		} catch (ClassNotFoundException e) {
-            throw new ServletException(e);
-        }
 		//HttpSession s=req2.getSession();
 		/*For one docloader per session
 		final DocumentLoader docLoader;
@@ -101,21 +101,17 @@ public class SMain extends HttpServlet {
 		Auth.cur.enter(auth, new Runnable() {
 			@Override
 			public void run() {
-				JarDownloader.jarFile.enter(jarFile, new Runnable() {
+				DocumentLoader.cur.enter(docLoader, new Runnable() {
 					@Override
 					public void run() {
-						DocumentLoader.cur.enter(docLoader, new Runnable() {
-							@Override
-							public void run() {
-								try {
-									new HttpContext(DocumentLoader.cur.get(), req, res).proc();
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-							}
-						});
+						try {
+							new HttpContext(DocumentLoader.cur.get(), req, res).proc();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
 				});
+
 			}
 		});
 	}
@@ -139,7 +135,7 @@ public class SMain extends HttpServlet {
 		doIt(req,res);
 	}
 	SDB sdb;
-	String jarFile;
+	//String jarFile;
 	DocumentLoader docLoader;
 	/*public  File getNewestDBFile() throws IOException {
 		return getNewestPrimaryDBFile(dbDir());
@@ -207,8 +203,8 @@ public class SMain extends HttpServlet {
 		if (!isServlet || servletInited) return;
 		servletInited=true;
 		setupApplicationContext();
-		String jarfileP = getServletContext().getInitParameter("jarFile");
-		if (jarfileP!=null) jarFile=detectPath(jarfileP  );
+		//String jarfileP = getServletContext().getInitParameter("jarFile");
+		//if (jarfileP!=null) jarFile=detectPath(jarfileP  );
 		/*File newest =  getNewestDBFile();
 		if (newest==null) Log.die("Error no db file exitst in "+dbDir());
 		System.out.println("Using "+newest+" as db.");*/
@@ -250,7 +246,7 @@ public class SMain extends HttpServlet {
 		//if (newest==null) newest=setupDB();
 
 
-		jarFile="";
+		//jarFile="";
 		//loader=new DocumentLoader(sdb);
 		//int port = 3002;
 		AutoRestart auto = new AutoRestart(port, workspace.home.rel("stop.lock").javaIOFile());
