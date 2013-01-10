@@ -55,13 +55,13 @@ public class JarGenerator {
 			ZipEntry e = in.getNextJarEntry();
 			if (e==null) break;
 			//System.out.println(e.getName());
-			if (e.getName().startsWith(Workspace.DB_INIT_PATH)) {
+			if (e.getName().startsWith(FileWorkspace.DB_INIT_PATH)) {
 				if (!putdb){
 					putdb=true;
-					ZipEntry prim = new ZipEntry(Workspace.DB_INIT_PATH+"/"+Workspace.PRIMARY_DBID_TXT);
+					ZipEntry prim = new ZipEntry(FileWorkspace.DB_INIT_PATH+"/"+FileWorkspace.PRIMARY_DBID_TXT);
 					out.putNextEntry(prim);
 					out.write(dbid.getBytes());
-					ZipEntry maindb= new ZipEntry(Workspace.DB_INIT_PATH+"/"+Workspace.MAIN_DB);
+					ZipEntry maindb= new ZipEntry(FileWorkspace.DB_INIT_PATH+"/"+FileWorkspace.MAIN_DB);
 					out.putNextEntry(maindb);
 					dbFile.writeTo(out);
 				}

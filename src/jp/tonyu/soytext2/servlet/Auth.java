@@ -31,13 +31,16 @@ public class Auth implements Wrappable {
 		super();
 		this.a = a;
 	}
-	public boolean login(String user, Object credential) {
+	public String login(Object credential) {
 		//AuthenticatorList a=authenticator();
-		if (a!=null && a.check(user, credential+"")) {
-			this.user=user;
-			return true;
+		if (a!=null){
+			String user=a.check(credential);
+			if (user!=null) {
+				this.user=user;
+			}
+			return user;
 		}
-		return false;
+		return null;
 	}
 	public String user() {
 		String user=(this.user==null?"nobody":this.user); //  currentSession().userName();

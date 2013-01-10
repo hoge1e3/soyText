@@ -31,6 +31,7 @@ import jp.tonyu.db.WriteAction;
 import jp.tonyu.debug.Log;
 import jp.tonyu.soytext2.document.LTRTest.DS;
 import jp.tonyu.soytext2.file.ReadableBinData;
+import jp.tonyu.soytext2.servlet.Workspace;
 
 public class LTRTest {
     static class DS implements DocumentSet {
@@ -148,6 +149,12 @@ public class LTRTest {
             // TODO 自動生成されたメソッド・スタブ
 
         }
+
+		@Override
+		public Workspace getSystemContext() {
+			// TODO 自動生成されたメソッド・スタブ
+			return null;
+		}
 
     }
     public static void main(String[] args) {

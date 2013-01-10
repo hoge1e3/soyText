@@ -24,11 +24,12 @@ import java.sql.SQLException;
 import jp.tonyu.db.NotInReadTransactionException;
 import jp.tonyu.soytext2.document.SDB;
 import jp.tonyu.soytext2.servlet.Workspace;
+import jp.tonyu.soytext2.servlet.FileWorkspace;
 import jp.tonyu.util.SFile;
 
 public class Common {
 	static String dbid;
-	static Workspace workspace;
+	static FileWorkspace workspace;
 	/**
 	 * Parse args with
 	 *   java App [DBID]
@@ -39,7 +40,7 @@ public class Common {
 	 * @throws SQLException
 	 */
 	static void parseArgs(String []args) throws IOException, SQLException {
-		workspace=new Workspace(new SFile("."));
+		workspace=new FileWorkspace(new SFile("."));
 		dbid=(args.length==0?workspace.getPrimaryDBID():args[0]);
 	}
 	static private SDB _sdb;

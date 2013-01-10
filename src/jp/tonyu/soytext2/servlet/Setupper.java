@@ -13,9 +13,9 @@ import jp.tonyu.soytext2.js.DocumentLoader;
 import jp.tonyu.util.SFile;
 
 public class Setupper {
-    Workspace ws;
+    FileWorkspace ws;
 
-    public Setupper(Workspace ws) {
+    public Setupper(FileWorkspace ws) {
         super();
         this.ws=ws;
     }

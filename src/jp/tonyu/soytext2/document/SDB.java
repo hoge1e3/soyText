@@ -53,6 +53,8 @@ import jp.tonyu.db.WriteAction;
 import jp.tonyu.debug.Log;
 import jp.tonyu.soytext2.file.BinData;
 import jp.tonyu.soytext2.file.ReadableBinData;
+import jp.tonyu.soytext2.servlet.Workspace;
+import jp.tonyu.soytext2.servlet.FileWorkspace;
 import jp.tonyu.util.MD5;
 import jp.tonyu.util.SFile;
 import jp.tonyu.util.TDate;
@@ -64,6 +66,7 @@ public class SDB implements DocumentSet {
     JDBCHelper helper;
     static final int version=3;
     TransactionMode mode;
+    Workspace workspace;
     @Override
     public synchronized void transaction(TransactionMode mode) {
         if (this.mode!=null) Log.die("Already in "+mode);
@@ -126,17 +129,19 @@ public class SDB implements DocumentSet {
         return helper;
     }
     String dbid;
-    final File dbFile;
+    final SFile dbFile;
     SFile blobDir;
     SFile backupDir;
     SFile homeDir;
-    public static Map<File, SDB> insts=new HashMap<File, SDB>();
+    public static Map<SFile, SDB> insts=new HashMap<SFile, SDB>();
     public static int instc=0;
-    public SDB(File file , String dbid) throws SQLException, ClassNotFoundException {
-        Log.d(this, "DB file="+file);
+    public SDB(FileWorkspace workspace , String dbid) throws SQLException, ClassNotFoundException {
+    	dbFile=workspace.getDBFile(dbid);
+    	this.workspace=workspace;
+    	Log.d(this, "DB file="+dbFile);
         // looseTransaction=new LooseTransaction(this);
         Class.forName("org.sqlite.JDBC");
-        Connection conn=DriverManager.getConnection("jdbc:sqlite:"+file);
+        Connection conn=DriverManager.getConnection("jdbc:sqlite:"+dbFile);
         conn.setAutoCommit(false);
         helper=new JDBCHelper(conn, version) {
             @Override
@@ -146,8 +151,8 @@ public class SDB implements DocumentSet {
         };
         conn.setAutoCommit(false);
         // open(file, version);
-        dbFile=file;
-        homeDir=new SFile(file).parent();
+        //dbFile=file;
+        homeDir=dbFile.parent();
         blobDir=homeDir.rel("blob");
         backupDir=homeDir.rel("backup");
         readTransaction(new ReadAction() {
@@ -159,7 +164,7 @@ public class SDB implements DocumentSet {
         });
         this.dbid=dbid;//getDBIDFromFile(new SFile(file.getAbsoluteFile()));
         instc++;
-        insts.put(file, this);
+        insts.put(dbFile, this);
     }
     Pattern dbidPat=Pattern.compile("\\w*\\.\\w+\\.");
     /*private String getDBIDFromFile(SFile file) {
@@ -622,7 +627,7 @@ public class SDB implements DocumentSet {
          */
         dest.logManager.setLastNumber(logManager.lastNumber);
     }
-    public File getFile() {
+    public SFile getFile() {
         return dbFile;
     }
     @Override
@@ -750,4 +755,8 @@ public class SDB implements DocumentSet {
     public void restore(Map<String, List<Map<String, Object>>> data) throws SQLException {
         helper.restore(data);
     }
+	@Override
+	public Workspace getSystemContext() {
+		return workspace;
+	}
 }

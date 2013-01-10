@@ -60,6 +60,7 @@ import jp.tonyu.soytext2.search.expr.QueryExpression;
 import jp.tonyu.soytext2.servlet.Auth;
 import jp.tonyu.soytext2.servlet.DocumentProcessor;
 import jp.tonyu.soytext2.servlet.HttpContext;
+import jp.tonyu.soytext2.servlet.Workspace;
 import jp.tonyu.util.Ref;
 
 import org.mozilla.javascript.Context;
@@ -87,6 +88,9 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         ltr=new LooseTransaction(documentSet);
         this.jsSession=new JSSession();
         loaders.put(this, true);
+    }
+    public Workspace getWorkspace() {
+    	return documentSet.getSystemContext();
     }
     public void notifySave(DocumentRecord d) {
         for (DocumentLoader dl : loaders.keySet()) {
@@ -537,17 +541,27 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     public String rootDocumentId() {
         return "root@"+documentSet.getDBID();  // TODO: @.
     }
-    AuthenticatorList auth;
+    private AuthenticatorList authList;
+    /*public Auth newAuth() {
+    	DocumentScriptable r=rootDocument();
+        Object a=r.get("authFunc");
+        if (a instanceof Function) {
+            Function f=(Function) a;
+            Log.d(this, "Using - "+f+" as authfunc");
+            return new Auth(f);
+        }
+        return new Auth(authenticator());
+    }*/
     public AuthenticatorList authenticator() {
-        if (auth!=null)
-            return auth;
-        auth=new AuthenticatorList();
+        if (authList!=null)
+            return authList;
+        authList=new AuthenticatorList();
         DocumentScriptable r=rootDocument();
         Object a=r.get("authenticator");
         if (a instanceof Function) {
             Function f=(Function) a;
             Log.d(this, "Using - "+f+" as authlist");
-            jsSession.call(f, new Object[] { auth });
+            jsSession.call(f, new Object[] { authList });
         }
         /*
          * QueryBuilder qb=QueryBuilder.create("authenticatorList:true");
@@ -558,7 +572,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
          * "Using - "+f+" as authlist"); f.call(cx, scope, f, new
          * Object[]{auth}); return true; } });
          */
-        return auth;
+        return authList;
     }
     private void copyDocumentExceptDates(DocumentRecord src, DocumentRecord dst) throws SQLException {
         long lu=dst.lastUpdate;

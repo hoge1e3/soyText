@@ -26,7 +26,13 @@ public class AnyAuth implements Authenticator {
 		this.commonPassword=commonPassword;
 	}
 	@Override
-	public boolean check(String username, String password) {
-		return commonPassword.equals(password);
+	public String check(Object c) {
+		UserPasswordCredential p=UserPasswordCredential.extract(c);
+		if (p!=null) {
+			if (commonPassword.equals(p.password)) {
+				return p.username;
+			}
+		}
+		return null;
 	}
 }

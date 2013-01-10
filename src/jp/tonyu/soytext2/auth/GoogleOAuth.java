@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import jp.tonyu.js.Wrappable;
 import jp.tonyu.util.SFile;
 import net.arnx.jsonic.JSON;
 import net.arnx.jsonic.JSONException;
@@ -25,7 +26,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 // https://developers.google.com/accounts/docs/OAuth2WebServer
-public class GoogleOAuth  {
+public class GoogleOAuth implements Wrappable {
     public static String encode(String u) {
         try {
             return URLEncoder.encode(u, "utf-8");
@@ -35,11 +36,11 @@ public class GoogleOAuth  {
             return u;
         }
     }
-    String redirect_uri;
-    String token_uri;
-    String auth_uri;
-    String client_id;
-    String client_secret;
+    private String redirect_uri;
+    private String token_uri;
+    private String auth_uri;
+    private String client_id;
+    private String client_secret;
     public GoogleOAuth(SFile conf) throws JSONException, FileNotFoundException, IOException {
     	Map confo=(Map)JSON.decode(conf.inputStream());
     	Map web=(Map)confo.get("web");
@@ -49,8 +50,10 @@ public class GoogleOAuth  {
     	client_id=""+web.get("client_id");
     	client_secret=""+web.get("client_secret");
     }
-
     public String getAccessToken(String code) throws ClientProtocolException, IOException {
+    	return getAccessToken(code,redirect_uri);
+    }
+    public String getAccessToken(String code, String redirect_uri) throws ClientProtocolException, IOException {
 
         HttpClient httpclient = new DefaultHttpClient();
 		HttpPost httppost = new HttpPost(token_uri);
@@ -83,7 +86,10 @@ public class GoogleOAuth  {
 
         return (Map)JSON.decode(resStr);
     }
-    public String authURIWithParams(){
+    public String authURI(){
+    	return authURI(redirect_uri);
+    }
+    public String authURI(String redirect_uri){
     	return auth_uri+"?"+
                 "scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&"+
                 "state=%2Fprofile&"+

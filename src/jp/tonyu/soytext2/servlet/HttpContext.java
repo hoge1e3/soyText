@@ -42,6 +42,7 @@ import jp.tonyu.js.Args;
 import jp.tonyu.js.BuiltinFunc;
 import jp.tonyu.js.ContextRunnable;
 import jp.tonyu.js.Wrappable;
+import jp.tonyu.soytext2.auth.UserPasswordCredential;
 import jp.tonyu.soytext2.browserjs.IndentAdaptor;
 import jp.tonyu.soytext2.document.DocumentRecord;
 import jp.tonyu.soytext2.document.DocumentSet;
@@ -168,9 +169,9 @@ public class HttpContext implements Wrappable {
 		_params=res;
 		return res;
 	}
-    public void downloadJar(String dbid, String []ids) throws IOException, SQLException, ClassNotFoundException {
+    /*public void downloadJar(String dbid, String []ids) throws IOException, SQLException, ClassNotFoundException {
     	JarDownloader.startDownload(this, dbid, (SDB)documentSet(), ids);
-    }
+    }*/
 
     public Map<String,Object> params(final Map<String, ?> typeHints) {
     	final Map<String, String> p = params();
@@ -623,9 +624,9 @@ public class HttpContext implements Wrappable {
 			importDocuments(sc,null,null);
 		}
 	}*/
-	public boolean isOfflineMode() {
+	/*public boolean isOfflineMode() {
 		return JarDownloader.jarFile.get().length()==0;
-	}
+	}*/
 	/*private long importDocuments(Scanner sc, List<String> importedIds, Set<String> excludes) {
 		long newRemoteLastSynced=0;
 		try {
@@ -997,7 +998,8 @@ public class HttpContext implements Wrappable {
 		boolean prompt=true;
 		if (/*"logout".equals(user) || */
 				(user!=null && user.length()>0 && pass!=null && pass.length()>0)) {
-			if (Auth.cur.get().login(user, pass)) {
+			String userr=Auth.cur.get().login(new UserPasswordCredential(user,pass));
+			if (userr!=null) {
 				prompt=false;
 	    		String after=params().get("after");
 	    		if (after!=null) {

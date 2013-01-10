@@ -30,11 +30,12 @@ public class AuthenticatorList implements Authenticator, Wrappable {
 	Vector<Authenticator> auths=new Vector<Authenticator>();
 	Set<String> roots=new HashSet<String>();
 	@Override
-	public boolean check(String username, String password) {
+	public String check(Object credential) {
 		for (Authenticator a: auths) {
-			if (a.check(username, password)) return true;
+			String res=a.check(credential);
+			if (res!=null) return res;
 		}
-		return false;
+		return null;
 	}
 	public void install(Authenticator a) {
 		Log.d(this, "Installed - "+a);
@@ -50,7 +51,7 @@ public class AuthenticatorList implements Authenticator, Wrappable {
 		AuthenticatorList res=new AuthenticatorList();
 		res.install(new AnyAuth(""));
 		/*res.install(new Authentificator() {
-			
+
 			@Override
 			public boolean check(String username, String password) {
 				return "all".equals(username) && "oll".equals(password);

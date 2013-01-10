@@ -27,6 +27,7 @@ import jp.tonyu.db.NotInWriteTransactionException;
 import jp.tonyu.db.TransactionMode;
 import jp.tonyu.soytext2.file.BinData;
 import jp.tonyu.soytext2.file.ReadableBinData;
+import jp.tonyu.soytext2.servlet.Workspace;
 
 public interface DocumentSet {
 	public DocumentRecord newDocument() throws NotInWriteTransactionException;
@@ -51,4 +52,6 @@ public interface DocumentSet {
     public void all(UpdatingDocumentAction a)  throws NotInWriteTransactionException;
 
     public boolean indexAvailable(String key)  throws NotInReadTransactionException;
+
+    public Workspace getSystemContext();
 }

@@ -91,7 +91,7 @@ public class SMain extends HttpServlet {
 		}
 		HttpSession s = req2.getSession();
 		Object aa=s.getAttribute(AUTH2);
-		Auth auth;
+		final Auth auth;
 		if (aa instanceof Auth) {
 			auth=(Auth)aa;
 		} else {
@@ -187,10 +187,10 @@ public class SMain extends HttpServlet {
 	}
 	//String workspace;
 	//SFile workspaceDir;
-	Workspace workspace;
+	FileWorkspace workspace;
 	synchronized void setupApplicationContext() {
 		if (workspace==null) {
-			workspace=new Workspace( new SFile( detectPath(  getServletContext().getInitParameter("workspace") ) ));
+			workspace=new FileWorkspace( new SFile( detectPath(  getServletContext().getInitParameter("workspace") ) ));
 			//workspaceDir=new SFile(workspace);
 		}
 	}
@@ -239,7 +239,7 @@ public class SMain extends HttpServlet {
 	}
 	// As Application
 	public SMain(SFile workspaceF, int port) throws Exception{
-		workspace=new Workspace(workspaceF);
+		workspace=new FileWorkspace(workspaceF);
 		//workspaceDir=new SFile(new File("."));
 		//workspace.setupDB();
 		//File newest = getNewestDBFile();

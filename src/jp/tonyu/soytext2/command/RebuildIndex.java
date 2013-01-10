@@ -24,11 +24,12 @@ import java.sql.SQLException;
 import jp.tonyu.soytext2.document.SDB;
 import jp.tonyu.soytext2.js.DocumentLoader;
 import jp.tonyu.soytext2.servlet.Workspace;
+import jp.tonyu.soytext2.servlet.FileWorkspace;
 import jp.tonyu.util.SFile;
 
 public class RebuildIndex {
 	public static void main(String[] args) throws Exception {
-		Workspace workspace=new Workspace(new SFile("."));
+		FileWorkspace workspace=new FileWorkspace(new SFile("."));
 		String dbid=(args.length==0?workspace.getPrimaryDBID():args[0]);
 
 		/*File f;
