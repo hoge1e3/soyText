@@ -20,6 +20,7 @@ package jp.tonyu.soytext2.servlet;
 
 import jp.tonyu.js.Wrappable;
 import jp.tonyu.soytext2.auth.AuthenticatorList;
+import jp.tonyu.soytext2.auth.LocalRoot;
 import jp.tonyu.util.Context;
 
 public class Auth implements Wrappable {
@@ -33,20 +34,20 @@ public class Auth implements Wrappable {
 	}
 	public String login(Object credential) {
 		//AuthenticatorList a=authenticator();
-		if (a!=null){
-			String user=a.check(credential);
-			if (user!=null) {
-				this.user=user;
-			}
-			return user;
+		String user=LocalRoot.check(credential);
+		if (user==null && a!=null){
+			user=a.check(credential);
 		}
-		return null;
+		if (user!=null) {
+			this.user=user;
+		}
+		return user;
 	}
 	public String user() {
 		String user=(this.user==null?"nobody":this.user); //  currentSession().userName();
 		return user;
 	}
-	public boolean isRoot() {
-	    return a.isRootUser(user());
+	public boolean isRootUser() {
+	    return LocalRoot.isRootUser(user()) || a.isRootUser(user());
 	}
 }

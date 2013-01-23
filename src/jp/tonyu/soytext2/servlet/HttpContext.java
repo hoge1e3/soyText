@@ -87,18 +87,18 @@ public class HttpContext implements Wrappable {
 		return appCtx.sessionManager;
 	}*/
 	public boolean isRoot() {
-		String addr=req.getRemoteAddr();
+		/*String addr=req.getRemoteAddr();
 		Log.d("RMT", addr);
 		String host=req.getRemoteHost();
 		Log.d("RMTH", host);
 
-		/*if ("localhost".equals(addr) || "127.0.0.1".equals(addr) || "0:0:0:0:0:0:0:1".equals(addr)) {
+		if ("localhost".equals(addr) || "127.0.0.1".equals(addr) || "0:0:0:0:0:0:0:1".equals(addr)) {
 			return true;
 		}*/
 		//if (addr !=null && addr.length()>0 && addr.indexOf(".")<0) return true; // like my_computer
-		String user = user();
-		if (documentLoader.authenticator().isRootUser(user)) return true;
-		return false;
+		/*String user = user();
+		if (Auth.cur.get().isRootUser(user)) return true;*/
+		return Auth.cur.get().isRootUser();
 	}
 	public String user() {
 		return Auth.cur.get().user();
@@ -282,15 +282,16 @@ public class HttpContext implements Wrappable {
     		return;
     	}*/
 		String[] s=args();
+        String cmd=null;
+        if (s.length>=2) cmd=s[1];
         Log.d(this,"pathinfo = "+req.getPathInfo());
         Log.d(this,"qstr = "+req.getQueryString());
         DocumentScriptable root=documentLoader.rootDocument();
         if (!isRoot()) {
             Object permitted=ScriptableObject.getProperty(root, "permittedROMCommands");
             boolean p=false;
-            if (s.length>=2 && permitted instanceof Scriptable) {
+            if (cmd!=null && permitted instanceof Scriptable) {
                 Scriptable perm=(Scriptable) permitted;
-                String cmd=s[1].toLowerCase();
                 //Log.d(this, "Perm cmd = "+cmd);
                 p=ScriptableObject.hasProperty(perm, cmd);
                 /*for (Object name: perm.getIds() ) {
