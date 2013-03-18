@@ -70,7 +70,7 @@ import org.mozilla.javascript.Scriptable;
 public class DocumentLoader implements Wrappable, IDocumentLoader {
     public static final jp.tonyu.util.Context<DocumentLoader> cur=new jp.tonyu.util.Context<DocumentLoader>();
     // private static final Object LOADING = "LOADING";
-    public static final Pattern idpatWiki=DocumentProcessor.idpatWiki;// Pattern.compile("\\[\\[([^\\]]+)\\]\\]");
+    //public static final Pattern idpatWiki=DocumentProcessor.idpatWiki;// Pattern.compile("\\[\\[([^\\]]+)\\]\\]");
     private static final String ERROR_CONTENT="err_content";
     private static final String ERROR_MSG="err_message";
 
@@ -469,7 +469,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         Scriptables.each(src, new StringPropAction() {
             @Override
             public void run(String key, Object value) {
-                String str=(String) key;
+            	/*String str=(String) key;
                 Matcher m=idpatWiki.matcher(str);
                 if (m.matches()) {
                     String id=m.group(1);
@@ -477,9 +477,9 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
                     if (refd==null)
                         Log.die("[["+id+"]] not found");
                     dst.put(refd, value);
-                } else {
+                } else {*/
                     dst.put(key, value);
-                }
+                //}
             }
         });
         /*
@@ -492,14 +492,14 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
          * dst.put(key, value); } } }
          */
     }
-    public void setGetter(DocumentScriptable dst, final Function func) {
+    /*public void setGetter(DocumentScriptable dst, final Function func) {
         dst.setGetter(new Getter() {
             @Override
             public Object getFrom(Object src) {
                 return jsSession().call(func, new Object[] { src });
             }
         });
-    }
+    }*/
     @Override
     public Wrappable javaNative(String className) {
         try {
@@ -539,7 +539,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         return res;
     }
     public String rootDocumentId() {
-        return "root@"+documentSet.getDBID();  // TODO: @.
+        return "root."+documentSet.getDBID();  // TODO: @.
     }
     private AuthenticatorList authList;
     /*public Auth newAuth() {

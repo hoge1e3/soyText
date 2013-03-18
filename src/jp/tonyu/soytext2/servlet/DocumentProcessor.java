@@ -147,10 +147,10 @@ public class DocumentProcessor {
 		HttpServletResponse res=res();
 
 		res.setContentType( HttpContext.detectContentType(d) );
-		Object dir = d.get("dir");
+		//Object dir = d.get("dir");
 		String[] args = args();
 		int PATHSTART=3;
-		if (dir!=null && args.length>PATHSTART) {
+		/*if (dir!=null && args.length>PATHSTART) {
 			String[] args2=new String[args.length-PATHSTART];
 			for (int i=0 ; i<args2.length ; i++) {
 				args2[i]=args[i+PATHSTART];
@@ -160,7 +160,7 @@ public class DocumentProcessor {
 				SFile f = new SFile(documentSet().getBlob(id()));//  s.getBlobDir().rel(this.id());
 				feedDir(f,args2);
 		//}
-		} else {
+		} else {*/
 	   // String lastup = HttpContext.lastModifiedField(d);
 	   // res.setHeader( "Last-Modified" ,  lastup);
 
@@ -180,7 +180,7 @@ public class DocumentProcessor {
 		//Log.d(this, d.getDocument().id+" cont="+d.getDocument().content+" - "+d.get(HttpContext.bodyAttr));
 	        Object body = d.get(HttpContext.ATTR_BODY);
 			Httpd.respondByString(res, body+"");
-	    }
+	//}
 	}
 	private void feedDir(SFile f, String[] rels) throws IOException {
 		/*SFile f;
@@ -375,7 +375,7 @@ public class DocumentProcessor {
 	public String queryString() {
 		return ctx.queryString();
 	}
-	public static final Pattern idpat=Pattern.compile("[0-9]+(_[0-9]+)+(@[0-9_a-zA-Z]+)?");
-	public static final Pattern idpatWiki=Pattern.compile("\\[\\[([^\\]]+)\\]\\]");
+	//public static final Pattern idpat=Pattern.compile("[0-9]+(_[0-9]+)+(@[0-9_a-zA-Z]+)?");
+	//public static final Pattern idpatWiki=Pattern.compile("\\[\\[([^\\]]+)\\]\\]");
 
 }

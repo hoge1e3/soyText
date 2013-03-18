@@ -87,6 +87,7 @@ public class FileWorkspace implements Workspace {
 	@Override
 	public String getPrimaryDBID() throws IOException {
 		SFile id=primaryDBFile();
+		if (!id.exists()) Log.die(id+" does not found");
 		return id.lines()[0];
 	}
 	private SFile primaryDBFile() {
@@ -124,6 +125,33 @@ public class FileWorkspace implements Workspace {
 	public SFile getDBFile(String dbid) {
 		return singleDBHome(dbid).rel(MAIN_DB);
 	}
+	public SFile getBackupDir(String dbid) {
+	    return singleDBHome(dbid).rel("backup");
+	}
+	/*public SFile getBlobDir(String dbid) {
+	    return singleDBHome(dbid).rel("blob");
+	}*/
+	public SFile getHashBlobDir(String dbid) {
+	    return singleDBHome(dbid).rel("hashBlob");
+	}
+	public SFile getRealtimBackupDir(String dbid) {
+	    return singleDBHome(dbid).rel("rtBack");
+	}
+	public SFile getNewestBackupFile(String dbid) {
+        SFile src=null;
+        SFile backupDir=getBackupDir(dbid);
+        Log.d("newestBackup", "Search backup "+backupDir+" *.json");
+        for (SFile txt : backupDir) {
+            if (!txt.name().endsWith(".json"))
+                continue;
+            if (src==null||txt.lastModified()>src.lastModified()) {
+                src=txt;
+            }
+        }
+        if (src==null)
+            Log.die("Backup not found in "+backupDir);
+        return src;
+    }
 	private boolean isEmpty() {
 		return !primaryDBFile().exists();
 	}

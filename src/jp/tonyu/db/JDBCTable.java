@@ -139,7 +139,9 @@ public class JDBCTable<T extends JDBCRecord> {
             }
             String type="TEXT";
             Class ftype=f.getType();
-            if (ftype.equals(Long.TYPE)||ftype.equals(Integer.TYPE)) {
+            if (ftype.equals(Long.TYPE)) {
+                type="BIGINT";
+            } else if (ftype.equals(Integer.TYPE)) {
                 type="INTEGER";
             }
             if (fname.equals(rec.primaryKeyName())) {

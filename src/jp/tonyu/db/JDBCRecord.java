@@ -157,7 +157,7 @@ public abstract class JDBCRecord implements Cloneable {
 				values[i]=f.get(this);
 				i++;
 			}
-			Log.d("ToValues", Util.join(",",values));
+			//Log.d("ToValues", Util.join(",",values));
 			return (values);
 		} catch (NoSuchFieldException e) {
 			Log.die(e);
@@ -278,16 +278,16 @@ public abstract class JDBCRecord implements Cloneable {
 						if (!fclass.isAssignableFrom(vclass)) {
 							if (value instanceof BigDecimal) {
 								BigDecimal d = (BigDecimal) value;
-								//Log.d("cast",fclass);
-								if (fclass.isAssignableFrom(Integer.TYPE)) {
-									value=d.intValue();
-								}
+								//Log.d("cast",fclass+" <- "+value);
 								if (fclass.isAssignableFrom(Long.TYPE)) {
 									value=d.longValue();
-								}
-								if (fclass.isAssignableFrom(Double.TYPE)) {
+								} else if (fclass.isAssignableFrom(Integer.TYPE)) {
+									value=d.intValue();
+								} else if (fclass.isAssignableFrom(Double.TYPE)) {
 									value=d.doubleValue();
 								}
+								//Log.d("cast2",fclass+" <- "+value);
+
 							}
 						}
 					}

@@ -173,7 +173,7 @@ public class HttpContext implements Wrappable {
     	JarDownloader.startDownload(this, dbid, (SDB)documentSet(), ids);
     }*/
 
-    public Map<String,Object> params(final Map<String, ?> typeHints) {
+    /*public Map<String,Object> params(final Map<String, ?> typeHints) {
     	final Map<String, String> p = params();
     	final Map<String,Object> res=new HashMap<String, Object>();
     	Maps.entries(p).each(new MapAction<String, String>() {
@@ -213,7 +213,7 @@ public class HttpContext implements Wrappable {
 			}
 		});
     	return res;
-    }
+    }*/
     String nativePrefix="ROM";
 	public String[] args() {
     	String str=req.getPathInfo();
@@ -826,7 +826,7 @@ public class HttpContext implements Wrappable {
 			String id=params().get("id");
 			if (c.check()) {
 				DocumentScriptable d;
-				if (id!=null && id.indexOf("@")>=0) { // TODO: @.
+				if (id!=null && id.indexOf(".")>=0) { // TODO: @.
 					d = documentLoader.newDocument(id);
 				} else {
 					d = documentLoader.newDocument();

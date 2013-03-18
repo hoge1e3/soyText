@@ -86,11 +86,6 @@ public class LTRTest {
             mode=null;
         }
 
-        @Override
-        public int log(String date, String action, String target, String option) {
-            // TODO 自動生成されたメソッド・スタブ
-            return 0;
-        }
 
         @Override
         public String getDBID() {
@@ -112,7 +107,6 @@ public class LTRTest {
             return false;
         }
 
-        @Override
         public File getBlob(String id) {
             // TODO 自動生成されたメソッド・スタブ
             return null;

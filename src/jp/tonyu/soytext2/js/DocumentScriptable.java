@@ -63,7 +63,7 @@ public class DocumentScriptable implements Function {
 	//public static final String PROTOTYPE = "prototype";
 	//public static final String CONSTRUCTOR = "constructor";
 	public static final String CALLSUPER="callSuper";
-	private static final Object GETTERKEY = "[[110414_051952@"+Origin.uid+"]]";
+	//private static final Object GETTERKEY = "[[110414_051952@"+Origin.uid+"]]";
 	//Scriptable __proto__;
 	Map<Object, Object>_binds=new HashMap<Object, Object>();
 	DocumentRecord _d;
@@ -150,7 +150,7 @@ public class DocumentScriptable implements Function {
 			return binds().containsKey(args[0]);
 		}
 	};
-	BuiltinFunc getBlobFunc= new BuiltinFunc() {
+	/*BuiltinFunc getBlobFunc= new BuiltinFunc() {
 
 		@Override
 		public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -188,7 +188,7 @@ public class DocumentScriptable implements Function {
 			}
 			return null;
 		}
-	};
+	};*/
 	int callsuperlim=0;
 	BuiltinFunc callSuperFunc =new BuiltinFunc() {
 
@@ -248,8 +248,8 @@ public class DocumentScriptable implements Function {
         //if ("compile".equals(key)) return compileFunc;
         if ("identityHashCode".equals(key)) return System.identityHashCode(this);
         if ("hasOwnProperty".equals(key)) return hasOwnPropFunc;
-        if ("setBlob".equals(key)) return setBlobFunc;
-        if ("getBlob".equals(key)) return getBlobFunc;
+        //if ("setBlob".equals(key)) return setBlobFunc;
+        //if ("getBlob".equals(key)) return getBlobFunc;
         if (SETCONTENTANDSAVE.equals(key)) return setContentAndSaveFunc;
         if (GETCONTENT.equals(key)) return getContentFunc;
         if (CALLSUPER.equals(key)) return callSuperFunc;
@@ -264,6 +264,7 @@ public class DocumentScriptable implements Function {
         if (("_"+DocumentRecord.LASTUPDATE).equals(key)) return d.lastUpdate;
         if (("_"+DocumentRecord.OWNER).equals(key)) return d.owner;
         if ("_summary".equals(key)) return d.summary;
+        if ("_version".equals(key)) return d.version;
         // end of use followings instead.
 
 		/*if (key instanceof DocumentScriptable) {
@@ -272,21 +273,21 @@ public class DocumentScriptable implements Function {
 		}*/
 		Object res = binds().get(key);
 		if (res!=null) return res;
-		if (key instanceof DocumentScriptable) {
+		/*if (key instanceof DocumentScriptable) {
 			DocumentScriptable keyDoc = (DocumentScriptable) key;
 			Getter g=keyDoc.getGetter();
 			if (g!=null) return g.getFrom(this);
-		}
+		}*/
 		/*Scriptable __proto__ = getPrototype();
 		if (__proto__!=null) return __proto__.get(key+"",__proto__);*/
 		return UniqueTag.NOT_FOUND;
 	}
-	public Getter getGetter() {
+	/*public Getter getGetter() {
 		return (Getter)get(GETTERKEY);
 	}
 	public void setGetter(Getter g) {
 		put(GETTERKEY, g);
-	}
+	}*/
 	public Object put(Object key,Object value) {
 		/*if (key instanceof DocumentScriptable) {
 			DocumentScriptable s = (DocumentScriptable) key;
@@ -446,6 +447,7 @@ public class DocumentScriptable implements Function {
 		refreshSummary();
 		refreshContent();
 		Log.d(this, "save() content changed to "+getDocument().content);
+		Thread.dumpStack();
 		PairSet<String,String> updatingIndex = indexUpdateMap();
 		loader.save(getDocument(), updatingIndex);
 		//loader.getDocumentSet().save(d,updatingIndex);// d.save();

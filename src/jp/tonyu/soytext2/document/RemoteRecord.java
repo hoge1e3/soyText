@@ -50,7 +50,7 @@ public class RemoteRecord extends JDBCRecord {
 	/**
 	 * The status of the remote system. For example:
 	 * <ul>
-	 *  <li>"master" - It can generate document of {@code dbid}(document having id ends with "@{@code dbid}" )
+	 *  <li>"master" - It can generate document of {@code dbid}(document having id ends with ".{@code dbid}" )
 	 *  <li>"mirror" - It cannot generate, but keep syncing with master and have full docuemnts of {@code dbid}
 	 *  <li>"mirror before Date" - It was kept syncing before the Date
 	 *  <li>"partial" - It having only partial documents of {@code dbid}

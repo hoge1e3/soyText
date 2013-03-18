@@ -35,6 +35,7 @@ public class Common {
 	 *   java App [DBID]
 	 *     DB Dir is pwd/db/DBID/
      *     DB File is pwd/db/DBID/main.db
+     *     if DBID is omitted pwd/db/primaryDBID.txt is used
 	 * @param args
 	 * @throws IOException
 	 * @throws SQLException

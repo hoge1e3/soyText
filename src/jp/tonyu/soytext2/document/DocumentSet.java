@@ -37,12 +37,12 @@ public interface DocumentSet {
 	public DocumentRecord byId(String id) throws NotInReadTransactionException;
 	public void transaction(TransactionMode mode);
     //public Object transactionMode();//, Runnable action);
-	public File getBlob(String id);
+	//public File getBlob(String id);
 	public HashBlob getHashBlob(String hash);
 	public HashBlob writeHashBlob(InputStream i);
     public void commit();
     public void rollback();
-	public int log( String date, String action, String target, String option)  throws NotInWriteTransactionException;
+	//public int log( String date, String action, String target, String option)  throws NotInWriteTransactionException;
 	public String getDBID();
 
 	//public void searchByIndex(String key, String value, IndexAction a)  throws NotInReadTransactionException;

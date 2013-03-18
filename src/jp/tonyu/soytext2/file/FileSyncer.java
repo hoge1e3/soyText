@@ -144,19 +144,13 @@ public class FileSyncer implements Wrappable {
 			writeBase64(w, sp);
 		}
 	}*/
-	public static SFile getBlobFile(DocumentSet ds,Scriptable file) {
+	/*public static SFile getBlobFile(DocumentSet ds,Scriptable file) {
 		// finds from  workspace/blob/id.ext
 		String blobExt=Scriptables.getAsString(file, "blobExt", "");
 		String fileId=Scriptables.getAsString(file, "id", null);
-		/*if (ds instanceof SDB && fileId!=null) {
-			SDB s=(SDB)ds;
-			SFile f = s.getBlobDir().rel(fileId+blobExt);
-			return f;
-		}
-		return null;*/
 		return new SFile( ds.getBlob(fileId) );
-	}
-	public static void setBlob(DocumentScriptable file , InputStream str) throws IOException {
+	}*/
+	/*public static void setBlob(DocumentScriptable file , InputStream str) throws IOException {
 		DocumentSet ds = file.loader.getDocumentSet();
 		SFile f=getBlobFile(ds,file);
 		if (f!=null) {
@@ -172,17 +166,15 @@ public class FileSyncer implements Wrappable {
 			cType=HttpContext.detectContentType(name);
 		}
 		ctx.getRes().setContentType(cType);
-		/*Object useBlobDir = ScriptableObject.getProperty(file, USE_BLOB_DIR);
-		if ("true".equals(useBlobDir)) {*/
+
 		DocumentSet ds=ctx.documentSet();
 		SFile f=getBlobFile(ds,file);
 		if (f!=null && f.exists()) {
 			f.writeTo(ctx.getRes().getOutputStream());
-		/*} else 	if (file.has(BASE64BODY, file)){
-			writeBase64(ctx.getRes().getOutputStream(),file);*/
+
 		} else {
 			ctx.getRes().getWriter().print(Scriptables.getAsString(file, HttpContext.ATTR_BODY,""));
 		}
 
-	}
+	}*/
 }

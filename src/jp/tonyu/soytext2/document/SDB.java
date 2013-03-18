@@ -22,10 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -37,7 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
+import java.util.logging.LogRecord;
 import java.util.regex.Pattern;
 
 import jp.tonyu.db.JDBCHelper;
@@ -51,10 +48,8 @@ import jp.tonyu.db.ReadAction;
 import jp.tonyu.db.TransactionMode;
 import jp.tonyu.db.WriteAction;
 import jp.tonyu.debug.Log;
-import jp.tonyu.soytext2.file.BinData;
-import jp.tonyu.soytext2.file.ReadableBinData;
-import jp.tonyu.soytext2.servlet.Workspace;
 import jp.tonyu.soytext2.servlet.FileWorkspace;
+import jp.tonyu.soytext2.servlet.Workspace;
 import jp.tonyu.util.MD5;
 import jp.tonyu.util.SFile;
 import jp.tonyu.util.TDate;
@@ -146,7 +141,7 @@ public class SDB implements DocumentSet {
         helper=new JDBCHelper(conn, version) {
             @Override
             public Class<? extends JDBCRecord>[] tables(int version) {
-                return q(DocumentRecord.class, IndexRecord.class, LogRecord.class);
+                return q(DocumentRecord.class, IndexRecord.class, IdSerialRecord.class);
             }
         };
         conn.setAutoCommit(false);
@@ -346,8 +341,9 @@ public class SDB implements DocumentSet {
     }
     private void save(final DocumentRecord d, final PairSet<String, String> indexValues, boolean realtimeBackup)
             throws SQLException, NotInWriteTransactionException {
-        LogRecord log=logManager.write("save", d.id);
-        d.lastUpdate=log.id;
+    	//LogRecord log=logManager.write("save", d.id);
+        d.lastUpdate=logManager.timeStamp(); //log.id;
+        d.version=d.lastUpdate+"@"+dbid;
         if (realtimeBackup) {
             try {
                 realtimeBackup(d);
@@ -377,18 +373,26 @@ public class SDB implements DocumentSet {
     public boolean createdAtThisDB(DocumentRecord d) {
         return dbid.equals(dbidPart(d));
     }
-    public String dbidPart(DocumentRecord d) {
+    public static String dbidPart(DocumentRecord d) {
         if (d==null||d.id==null)
             return null;
-        String[] s=d.id.split("@"); // TODO: @.
+        String id=d.id;
+        return dbIdPart(id);
+    }
+	public static String dbIdPart(String id) {
+		String[] s=id.split("\\.",2); // TODO: @.
         if (s.length<=1)
             return null;
         return s[1];
-    }
-    public int serialPart(DocumentRecord d) {
+	}
+    public static int serialPart(DocumentRecord d) {
         if (d==null||d.id==null)
             return 0;
-        String[] s=d.id.split("@"); // TODO: @.
+        String id=d.id;
+        return serialPart(id);
+    }
+	public static int serialPart(String id) {
+		String[] s=id.split("\\.",2); // TODO: @.
         if (s.length<=0)
             return 0;
         try {
@@ -396,7 +400,7 @@ public class SDB implements DocumentSet {
         } catch (NumberFormatException e) {
             return 0;
         }
-    }
+	}
     public void restoreFromRealtimeBackup(SFile src, Set<String> updated) throws SQLException, JSONException,
             FileNotFoundException, IOException, NotInWriteTransactionException {
         DocumentRecord d=new DocumentRecord();
@@ -433,21 +437,17 @@ public class SDB implements DocumentSet {
     public JDBCTable<DocumentRecord> docTable() throws SQLException {
         return table(DocumentRecord.class);
     }
-    public JDBCTable<LogRecord> logTable() throws SQLException {
-        return table(LogRecord.class);
-    }
     public JDBCTable<IndexRecord> indexTable() throws SQLException {
         return table(IndexRecord.class);
     }
     @Override
     public DocumentRecord newDocument() throws NotInWriteTransactionException {
-        LogRecord log;
         try {
-            log=logManager.write("create", "<sameAsThisId>");
             DocumentRecord d=new DocumentRecord();
-            d.id=log.id+"@"+dbid;  // TODO: @.
-            d.lastUpdate=log.id;
-            d.lastAccessed=log.id;
+            int id=logManager.newSerial();
+            d.id=id+"."+dbid;  // TODO: @.
+            d.lastUpdate=id;
+            d.lastAccessed=id;
             // cache.put(d.id, d);
             return d;
         } catch (SQLException e) {
@@ -461,14 +461,14 @@ public class SDB implements DocumentSet {
             Log.die(id+" already exists.");
         LogRecord log;
         try {
-            log=logManager.write("create", id);
+            //log=logManager.write("create", id);
             DocumentRecord d=new DocumentRecord();
             d.id=id;
             if (createdAtThisDB(d)) {
                 logManager.liftUpLastNumber(serialPart(d));
             }
-            d.lastUpdate=log.id;
-            d.lastAccessed=log.id;
+            d.lastAccessed=d.lastUpdate=logManager.timeStamp();  //log.id;
+             //log.id;
             // cache.put(d.id, d);
             return d;
         } catch (SQLException e) {
@@ -476,15 +476,14 @@ public class SDB implements DocumentSet {
             throw new RuntimeException(e);
         }
     }
-    public void printLog() throws NotInReadTransactionException {
+    /*public void printLog() throws NotInReadTransactionException {
         logManager.printAll();
     }
     public void importLog(LogRecord curlog) throws SQLException, NotInWriteTransactionException {
         logManager.importLog(curlog);
-    }
-    /*
+    }*
      * public void all(LogAction action) { logManager.all(action); }
-     */
+     *
     @Override
     public int log(String date, String action, String target, String option) throws NotInWriteTransactionException {
         LogRecord l;
@@ -495,7 +494,8 @@ public class SDB implements DocumentSet {
             throw new RuntimeException(e);
         }
         return l.id;
-    }
+    	return 0;
+    }*/
     private void addIndexValue(DocumentRecord d, String name, String value) throws SQLException,
             NotInWriteTransactionException {
         // use in writetransaction
@@ -585,7 +585,7 @@ public class SDB implements DocumentSet {
         List<Map<String,Object>> docs=(List)b.get(new DocumentRecord().tableName());
         for (Map<String,Object> doc:docs) {
         	if (doc.get("id").equals(ROOTSKEL)) {
-        		String newID="root@"+dbid;     // TODO: @.
+        		String newID="root."+dbid;     // TODO: @.
         		doc.put("id", newID);
         		break;
         	}
@@ -625,7 +625,7 @@ public class SDB implements DocumentSet {
         /*
          * } }, -1);
          */
-        dest.logManager.setLastNumber(logManager.lastNumber);
+        dest.logManager.setLastNumber(logManager.getLastNumber());
     }
     public SFile getFile() {
         return dbFile;
@@ -758,5 +758,8 @@ public class SDB implements DocumentSet {
 	@Override
 	public Workspace getSystemContext() {
 		return workspace;
+	}
+	public JDBCTable<IdSerialRecord> idSerialTable() throws SQLException {
+		return table(IdSerialRecord.class);
 	}
 }

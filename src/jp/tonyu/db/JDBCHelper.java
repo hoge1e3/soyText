@@ -233,7 +233,7 @@ public abstract class JDBCHelper {
                 Field f = rec.getField(fname);
                 Class<?> t=f.getType();
                 if (t.equals(Long.TYPE)) {
-                    long r=cur.getInt(i+1);
+                    long r=cur.getLong(i+1);
                     f.set(rec, r);
                 } else if (t.equals(Integer.TYPE)) {
                     int r=(int)cur.getInt(i+1);
@@ -332,7 +332,7 @@ public abstract class JDBCHelper {
     }
 
     private void debugQuery(String q) {
-        Log.d(this, "Query: "+q);
+    	//Log.d(this, "Query: "+q);
     }
     public JDBCCursor execQuery(String q) throws SQLException, NotInReadTransactionException {
         debugQuery(q);
@@ -350,7 +350,7 @@ public abstract class JDBCHelper {
     private PreparedStatement prepareStatement(String q, Object... args)
             throws SQLException {
         PreparedStatement st = db.prepareStatement(q);
-        Log.d(this, "Query-prep: "+q+" args="+Util.join(",", args));
+        //Log.d(this, "Query-prep: "+q+" args="+Util.join(",", args));
         cnt++; //if (cnt>500) Log.die("Stop!");
         for (int i=0 ; i<args.length; i++) {
             if (args[i] instanceof String) {
