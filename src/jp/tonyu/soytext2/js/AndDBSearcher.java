@@ -18,9 +18,11 @@
 
 package jp.tonyu.soytext2.js;
 
+import jp.tonyu.db.NotInWriteTransactionException;
 import jp.tonyu.debug.Log;
 import jp.tonyu.js.BuiltinFunc;
 import jp.tonyu.js.Wrappable;
+import jp.tonyu.soytext2.document.LooseWriteAction;
 import jp.tonyu.soytext2.search.AndQueryBuilder;
 import jp.tonyu.soytext2.search.expr.AndExpr;
 import jp.tonyu.soytext2.search.expr.AttrOperator;
@@ -47,6 +49,16 @@ public class AndDBSearcher implements Wrappable {
         qb=new AndQueryBuilder(andExpr);
 	}
     private AndQueryBuilder qb;
+	public void eachUpdate(final Function iter) {
+		dbscr.loader.ltr.write(new LooseWriteAction() {
+
+			@Override
+			public void run() throws NotInWriteTransactionException {
+				dbscr.loader.searchByQuery(qb.toQueryExpression(), iter);
+			}
+		});
+	}
+
 	public void each(Function iter) {
 		dbscr.loader.searchByQuery(qb.toQueryExpression(), iter);
 	}

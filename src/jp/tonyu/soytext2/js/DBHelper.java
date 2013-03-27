@@ -24,24 +24,30 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Vector;
 
+import jp.tonyu.db.NotInReadTransactionException;
 import jp.tonyu.db.NotInWriteTransactionException;
 import jp.tonyu.db.TransactionMode;
 import jp.tonyu.debug.Log;
 import jp.tonyu.js.AllPropAction;
+import jp.tonyu.js.ContextRunnable;
 import jp.tonyu.js.NumberPropAction;
 import jp.tonyu.js.Scriptables;
 import jp.tonyu.js.Wrappable;
 import jp.tonyu.soytext2.document.DocumentRecord;
 import jp.tonyu.soytext2.document.DocumentSet;
 import jp.tonyu.soytext2.document.HashBlob;
+import jp.tonyu.soytext2.document.IndexAction;
 import jp.tonyu.soytext2.document.IndexRecord;
+import jp.tonyu.soytext2.document.LooseReadAction;
 import jp.tonyu.soytext2.document.LooseWriteAction;
 import jp.tonyu.soytext2.document.PairSet;
 import jp.tonyu.soytext2.file.ReadableBinData;
 import jp.tonyu.soytext2.search.QueryBuilder;
 import jp.tonyu.soytext2.search.QueryExpressionParser;
 import jp.tonyu.soytext2.search.expr.AttrOperator;
+import jp.tonyu.util.Maps;
 
+import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 
@@ -170,5 +176,21 @@ public class DBHelper implements Wrappable{
     }
     public void all(Function iter) {
         loader.all(iter);
+    }
+    public void indexSearch(final String key, final String value, final Function iter)  {
+        loader.ltr.read(new LooseReadAction() {
+        	@Override
+        	public void run() throws NotInReadTransactionException {
+            	Map<String, String> keyValues=Maps.create(key, value);
+        		loader.getDocumentSet().searchByIndex(keyValues, new IndexAction() {
+        			@Override
+        			public boolean run(IndexRecord id) throws NotInReadTransactionException {
+        				DocumentScriptable doc=loader.byId(id.document);
+        				loader.jsSession().call(iter, new Object[]{doc} );
+        				return false;
+        			}
+        		});
+        	}
+        });
     }
 }

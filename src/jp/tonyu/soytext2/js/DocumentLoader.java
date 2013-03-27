@@ -218,6 +218,15 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         });
         notifySave(d);
     }
+    public void updateIndex(final DocumentRecord d, final PairSet<String, String> updatingIndex) {
+        ltr.write(new LooseWriteAction() {
+            @Override
+            public void run() throws NotInWriteTransactionException {
+                getDocumentSet().updateIndex(d, updatingIndex);
+            }
+        });
+    }
+
     // Map<String, DocumentScriptable> debugH=new HashMap<String,
     // DocumentScriptable>();
     private DocumentScriptable defaultDocumentScriptable(final DocumentRecord src) {

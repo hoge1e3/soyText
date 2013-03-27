@@ -24,6 +24,7 @@ import java.util.NoSuchElementException;
 import jp.tonyu.db.JDBCRecordCursor;
 import jp.tonyu.db.JDBCTable;
 import jp.tonyu.db.NotInReadTransactionException;
+import jp.tonyu.debug.Log;
 
 public class SingleIndexIterator implements IndexIterator {
 	JDBCRecordCursor<IndexRecord>  cur;
@@ -35,7 +36,11 @@ public class SingleIndexIterator implements IndexIterator {
 		this.sdb=sdb;
 		JDBCTable<IndexRecord> t = sdb.table(IndexRecord.class);
 		String value2=value+(char)32767;
-		cur = t.scope(IndexRecord.NAME_VALUE_LAST_UPDATE, new Object[]{key,value,Long.MIN_VALUE},new Object[]{key,value2,Long.MAX_VALUE});
+		long time=System.currentTimeMillis();
+		cur = t.scope(IndexRecord.NAME_VALUE_LAST_UPDATE,
+				new Object[]{key,value ,Long.MIN_VALUE},
+				new Object[]{key,value2,Long.MAX_VALUE});
+		Log.d(this, "Query time="+(System.currentTimeMillis()-time));
 		//cur = t.scope("name,value", new Object[]{key,value},new Object[]{key,value});
         this.key=key;
 		this.value=value;

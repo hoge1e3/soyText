@@ -350,7 +350,7 @@ public abstract class JDBCHelper {
     private PreparedStatement prepareStatement(String q, Object... args)
             throws SQLException {
         PreparedStatement st = db.prepareStatement(q);
-        //Log.d(this, "Query-prep: "+q+" args="+Util.join(",", args));
+        Log.d(this, "Query-prep: "+q+" args="+Util.join(",", args));
         cnt++; //if (cnt>500) Log.die("Stop!");
         for (int i=0 ; i<args.length; i++) {
             if (args[i] instanceof String) {

@@ -73,6 +73,7 @@ public class DocumentScriptable implements Function {
 	private static final Object SETCONTENTANDSAVE = "setContentAndSave";
 	private static final Object GETCONTENT = "getContent";
     private static final String DOLLAR="$";
+	public static final String ONUPDATEINDEX = "onUpdateIndex";
 	static int cnt=0;
 	public DocumentRecord getDocument() {
 	    if (_d!=null) return _d;
@@ -109,6 +110,15 @@ public class DocumentScriptable implements Function {
 		public Object call(Context cx, Scriptable scope, Scriptable thisObj,
 				Object[] args) {
 			save();
+			return DocumentScriptable.this;
+		}
+	};
+	BuiltinFunc updateIndexFunc =new BuiltinFunc() {
+
+		@Override
+		public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+				Object[] args) {
+			updateIndex();
 			return DocumentScriptable.this;
 		}
 	};
@@ -245,6 +255,7 @@ public class DocumentScriptable implements Function {
 	    //Log.d(this, "get - "+_id+"."+key);
         if ("id".equals(key)) return _id;
         if ("save".equals(key)) return saveFunc;
+        if ("updateIndex".equals(key)) return updateIndexFunc;
         //if ("compile".equals(key)) return compileFunc;
         if ("identityHashCode".equals(key)) return System.identityHashCode(this);
         if ("hasOwnProperty".equals(key)) return hasOwnPropFunc;
@@ -447,24 +458,33 @@ public class DocumentScriptable implements Function {
 		refreshSummary();
 		refreshContent();
 		Log.d(this, "save() content changed to "+getDocument().content);
-		Thread.dumpStack();
+		//Thread.dumpStack();
 		PairSet<String,String> updatingIndex = indexUpdateMap();
 		loader.save(getDocument(), updatingIndex);
 		//loader.getDocumentSet().save(d,updatingIndex);// d.save();
 	}
+	public void updateIndex() {
+		PairSet<String,String> updatingIndex = indexUpdateMap();
+		loader.updateIndex(getDocument(), updatingIndex);
+	}
 	private PairSet<String,String> indexUpdateMap() {
 		PairSet<String,String> updatingIndex=new PairSet<String,String>();
-		updateIndex(updatingIndex);
+		mkIndex(updatingIndex);
 		Log.d("updateIndex", "save() - index set to "+updatingIndex);
 		return updatingIndex;
 	}
-	private void updateIndex(PairSet<String,String> idx) {
+	private void mkIndex(PairSet<String,String> idx) {
 		String name = Scriptables.getAsString(this, "name", null);
 		if (name!=null) idx.put("name", name);
-		updateClassIndex(idx);
-		updateBackLinkIndex(this , idx);
+		mkClassIndex(idx);
+		mkBackLinkIndex(this , idx);
+		Object ouio = ScriptableObject.getProperty(this, ONUPDATEINDEX);
+		if (ouio instanceof Function) {
+			Function oui=(Function)ouio;
+			loader.jsSession().call(oui, this, new Object[]{ new IndexUpdateContext(idx) } );
+		}
 	}
-	private void updateClassIndex(	PairSet<String, String> idx) {
+	private void mkClassIndex(	PairSet<String, String> idx) {
 		int depth=0;
 		for (Function klass=Scriptables.getClass(this);
 		     klass!=null;
@@ -482,7 +502,7 @@ public class DocumentScriptable implements Function {
 	public String id() {
 		return _id;
 	}
-	private static void updateBackLinkIndex(final Scriptable s, final PairSet<String,String> idx) {
+	private static void mkBackLinkIndex(final Scriptable s, final PairSet<String,String> idx) {
 		if (s instanceof NativeJavaObject) return;
 		Scriptables.each(s, new AllPropAction() {
 			@Override
@@ -494,7 +514,7 @@ public class DocumentScriptable implements Function {
 					idx.put(IndexRecord.INDEX_REFERS, d.getDocument().id);
 				} else 	if (value instanceof Scriptable) {
 					Scriptable scr = (Scriptable) value;
-					updateBackLinkIndex(scr,idx);
+					mkBackLinkIndex(scr,idx);
 				}
 			}
 		});

@@ -172,8 +172,11 @@ public class JDBCTable<T extends JDBCRecord> {
     public JDBCRecordCursor<T> scope(OrderBy ord, Object[] from, Object[] to)
             throws SQLException, NotInReadTransactionException {
         Where w=where(ord, from, to);
-        return new JDBCRecordCursor<T>(rec, db.execQuery(selectFrom()+" where "
-                +w.buf+" order by "+ord+";", w.values));
+        long l=System.currentTimeMillis();
+        JDBCCursor qres = db.execQuery(selectFrom()+" where "
+                +w.buf+" order by "+ord+";", w.values);
+        //System.out.println("scope time="+(System.currentTimeMillis()-l));
+		return new JDBCRecordCursor<T>(rec, qres);
     }
     public int delete(OrderBy ord, Object[] from, Object[] to)
             throws SQLException, NotInWriteTransactionException {

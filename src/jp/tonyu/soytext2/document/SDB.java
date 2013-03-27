@@ -74,7 +74,7 @@ public class SDB implements DocumentSet {
     @Override
     public void commit() {
         try {
-            Log.d(this, "Commit from1 "+mode);
+            //Log.d(this, "Commit from1 "+mode);
             synchronized (this) {
                 if (mode==null) Log.die("Not in transaction");
                 Log.d(this, "Commit from2 "+mode);
