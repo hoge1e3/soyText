@@ -33,6 +33,7 @@ public interface DocumentSet {
 	public DocumentRecord newDocument() throws NotInWriteTransactionException;
 	public DocumentRecord newDocument(String id) throws NotInWriteTransactionException;
 	public void save(DocumentRecord d, PairSet<String,String> updatingIndex) throws NotInWriteTransactionException;
+	public void setVersion(DocumentRecord d, String version) throws NotInWriteTransactionException;
 	public void updateIndex(DocumentRecord d,PairSet<String,String> h) throws NotInWriteTransactionException;
 	public DocumentRecord byId(String id) throws NotInReadTransactionException;
 	public void transaction(TransactionMode mode);

@@ -356,7 +356,15 @@ public class SDB implements DocumentSet {
          *
          * @Override public void run(JDBCHelper db) throws SQLException {
          */
-        JDBCTable<DocumentRecord> t=docTable();
+        saveRaw(d);
+        updateIndexInTransaction(d, indexValues);
+        /*
+         * } });
+         */
+    }
+	private void saveRaw(final DocumentRecord d) throws SQLException,
+			NotInWriteTransactionException {
+		JDBCTable<DocumentRecord> t=docTable();
         DocumentRecord dd=t.find1("id", d.id);
         Log.d("SAVE", d);
         if (dd!=null) {
@@ -365,10 +373,17 @@ public class SDB implements DocumentSet {
             t.insert(d);
         }
         Log.d("SAVE", d+": done");
-        updateIndexInTransaction(d, indexValues);
-        /*
-         * } });
-         */
+	}
+    @Override
+    public void setVersion(DocumentRecord d, String version)
+    		throws NotInWriteTransactionException {
+    	d.version=version;
+    	try {
+			saveRaw(d);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
     }
     public boolean createdAtThisDB(DocumentRecord d) {
         return dbid.equals(dbidPart(d));

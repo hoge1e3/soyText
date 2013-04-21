@@ -150,6 +150,13 @@ public class LTRTest {
 			return null;
 		}
 
+		@Override
+		public void setVersion(DocumentRecord d, String version)
+				throws NotInWriteTransactionException {
+			// TODO 自動生成されたメソッド・スタブ
+
+		}
+
     }
     public static void main(String[] args) {
         DS d = new DS();

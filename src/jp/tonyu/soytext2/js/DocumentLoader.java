@@ -218,6 +218,15 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         });
         notifySave(d);
     }
+    public void setVesion(final DocumentRecord d, final String ver) {
+    	ltr.write(new LooseWriteAction() {
+            @Override
+            public void run() throws NotInWriteTransactionException {
+                getDocumentSet().setVersion(d, ver);
+            }
+        });
+        notifySave(d);
+    }
     public void updateIndex(final DocumentRecord d, final PairSet<String, String> updatingIndex) {
         ltr.write(new LooseWriteAction() {
             @Override
