@@ -47,9 +47,9 @@ public interface DocumentSet {
 	public String getDBID();
 
 	//public void searchByIndex(String key, String value, IndexAction a)  throws NotInReadTransactionException;
-	public void searchByIndex(Map<String, String> keyValues, IndexAction a)  throws NotInReadTransactionException;
+	public void searchByIndex(Map<String, String> keyValues, boolean exactMatch, IndexAction a)  throws NotInReadTransactionException;
 	public void all(DocumentAction a)  throws NotInReadTransactionException;
-    public void searchByIndex(Map<String, String> keyValues, UpdatingIndexAction a)  throws NotInWriteTransactionException;
+    public void searchByIndex(Map<String, String> keyValues, boolean exactMatch, UpdatingIndexAction a)  throws NotInWriteTransactionException;
     public void all(UpdatingDocumentAction a)  throws NotInWriteTransactionException;
 
     public boolean indexAvailable(String key)  throws NotInReadTransactionException;

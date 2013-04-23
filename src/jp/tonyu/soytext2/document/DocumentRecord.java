@@ -55,6 +55,7 @@ public class DocumentRecord extends JDBCRecord /*implements Wrappable*/ {
 	public String version="";
 	public String owner="",group="",permission="";
 	public static final String OWNER="owner",LASTUPDATE="lastUpdate",LASTUPDATE_DESC="-lastUpdate";
+    public static final String ATTR_SCOPE="scope";
 	/*public DocumentRecord(String id) {
 		//this.documentSet=documentSet;
 		this.id=id;

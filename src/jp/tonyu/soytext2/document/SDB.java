@@ -650,9 +650,9 @@ public class SDB implements DocumentSet {
         return dbid;
     }
     @Override
-    public void searchByIndex(Map<String, String> keyValues, IndexAction a) throws NotInReadTransactionException {
+    public void searchByIndex(Map<String, String> keyValues, boolean exactMatch, IndexAction a) throws NotInReadTransactionException {
         try {
-            IndexIterator it=indexIterator(keyValues);
+            IndexIterator it=indexIterator(keyValues, exactMatch);
             while (it.hasNext()) {
                 IndexRecord d=it.next();
                 if (a.run(d)) {
@@ -665,10 +665,10 @@ public class SDB implements DocumentSet {
         }
     }
     @Override
-    public void searchByIndex(final Map<String, String> keyValues, final UpdatingIndexAction a)
+    public void searchByIndex(final Map<String, String> keyValues, boolean exactMatch, final UpdatingIndexAction a)
             throws NotInWriteTransactionException {
         try {
-            IndexIterator it=indexIterator(keyValues);
+            IndexIterator it=indexIterator(keyValues, exactMatch);
             while (it.hasNext()) {
                 IndexRecord d=it.next();
                 if (a.run(d)) {
@@ -680,18 +680,18 @@ public class SDB implements DocumentSet {
             e.printStackTrace();
         }
     }
-    private IndexIterator indexIterator(final Map<String, String> keyValues) throws NotInReadTransactionException,
+    private IndexIterator indexIterator(final Map<String, String> keyValues, boolean exactMatch) throws NotInReadTransactionException,
             SQLException {
         if (keyValues.size()==1) {
             for (String key : keyValues.keySet()) {
                 String value=keyValues.get(key);
-                return new SingleIndexIterator(SDB.this, key, value);
+                return new SingleIndexIterator(SDB.this, key, value, exactMatch);
             }
         }
         final IntersectIndexIterator it=new IntersectIndexIterator();
         for (String key : keyValues.keySet()) {
             String value=keyValues.get(key);
-            it.add(new SingleIndexIterator(SDB.this, key, value));
+            it.add(new SingleIndexIterator(SDB.this, key, value, exactMatch));
         }
         return it;
     }

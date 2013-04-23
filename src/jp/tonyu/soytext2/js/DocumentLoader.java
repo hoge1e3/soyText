@@ -428,7 +428,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
                             return callDocIter(s , q , iter);
                         }
                     };
-                    getDocumentSet().searchByIndex(idxs, docAct);
+                    getDocumentSet().searchByIndex(idxs, false, docAct);
                 }
             });
         }

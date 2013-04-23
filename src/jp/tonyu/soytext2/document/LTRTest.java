@@ -95,11 +95,7 @@ public class LTRTest {
 
 
 
-        @Override
-        public void searchByIndex(Map<String, String> keyValues, IndexAction a) {
-            // TODO 自動生成されたメソッド・スタブ
 
-        }
 
         @Override
         public boolean indexAvailable(String key) {
@@ -112,12 +108,7 @@ public class LTRTest {
             return null;
         }
 
-        @Override
-        public void searchByIndex(Map<String, String> keyValues, UpdatingIndexAction a)
-                throws NotInWriteTransactionException {
-            // TODO 自動生成されたメソッド・スタブ
 
-        }
 
         @Override
         public void all(UpdatingDocumentAction a) throws NotInWriteTransactionException {
@@ -156,6 +147,22 @@ public class LTRTest {
 			// TODO 自動生成されたメソッド・スタブ
 
 		}
+
+        @Override
+        public void searchByIndex(Map<String, String> keyValues,
+                boolean exactMatch, IndexAction a)
+                throws NotInReadTransactionException {
+            // TODO 自動生成されたメソッド・スタブ
+
+        }
+
+        @Override
+        public void searchByIndex(Map<String, String> keyValues,
+                boolean exactMatch, UpdatingIndexAction a)
+                throws NotInWriteTransactionException {
+            // TODO 自動生成されたメソッド・スタブ
+
+        }
 
     }
     public static void main(String[] args) {

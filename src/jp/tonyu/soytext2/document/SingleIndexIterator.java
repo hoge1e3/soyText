@@ -32,15 +32,21 @@ public class SingleIndexIterator implements IndexIterator {
 	String key,value;
 
 	boolean hasNexted=false, lastHasNext;
-	public SingleIndexIterator(SDB sdb, String key, String value) throws SQLException, NotInReadTransactionException {
+	public SingleIndexIterator(SDB sdb, String key, String value, boolean exactMatch) throws SQLException, NotInReadTransactionException {
 		this.sdb=sdb;
 		JDBCTable<IndexRecord> t = sdb.table(IndexRecord.class);
-		String value2=value+(char)32767;
-		long time=System.currentTimeMillis();
-		cur = t.scope(IndexRecord.NAME_VALUE_LAST_UPDATE,
-				new Object[]{key,value ,Long.MIN_VALUE},
-				new Object[]{key,value2,Long.MAX_VALUE});
-		Log.d(this, "Query time="+(System.currentTimeMillis()-time));
+        long time=System.currentTimeMillis();
+		if (exactMatch) {
+            cur = t.scope(IndexRecord.NAME_VALUE_LAST_UPDATE,
+                    new Object[]{key,value ,Long.MIN_VALUE},
+                    new Object[]{key,value,Long.MAX_VALUE});
+		} else {
+		    String value2=value+(char)32767;
+		    cur = t.scope(IndexRecord.NAME_VALUE_LAST_UPDATE,
+		            new Object[]{key,value ,Long.MIN_VALUE},
+		            new Object[]{key,value2,Long.MAX_VALUE});
+		}
+        Log.d(this, "Query time="+(System.currentTimeMillis()-time));
 		//cur = t.scope("name,value", new Object[]{key,value},new Object[]{key,value});
         this.key=key;
 		this.value=value;

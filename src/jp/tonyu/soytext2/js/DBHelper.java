@@ -178,11 +178,14 @@ public class DBHelper implements Wrappable{
         loader.all(iter);
     }
     public void indexSearch(final String key, final String value, final Function iter)  {
+        indexSearch(key, value, true, iter);
+    }
+    public void indexSearch(final String key, final String value, final boolean exactMatch, final Function iter)  {
         loader.ltr.read(new LooseReadAction() {
         	@Override
         	public void run() throws NotInReadTransactionException {
             	Map<String, String> keyValues=Maps.create(key, value);
-        		loader.getDocumentSet().searchByIndex(keyValues, new IndexAction() {
+        		loader.getDocumentSet().searchByIndex(keyValues, exactMatch, new IndexAction() {
         			@Override
         			public boolean run(IndexRecord id) throws NotInReadTransactionException {
         				DocumentScriptable doc=loader.byId(id.document);
