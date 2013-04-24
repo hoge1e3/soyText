@@ -43,6 +43,8 @@ import jp.tonyu.soytext2.servlet.HttpContext;
 import jp.tonyu.util.SFile;
 import jp.tonyu.util.SPrintf;
 
+import net.arnx.jsonic.JSON;
+
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeJavaObject;
@@ -54,15 +56,14 @@ import org.omg.CosNaming.NamingContextPackage.NotFound;
 public class DocumentScriptable implements Function {
 	public static boolean lazyLoad=true;
 	boolean contentLoaded=!lazyLoad; // true iff loaded or loading
-	private void loadContent() {
+	private synchronized void loadContent() {
 		if (contentLoaded) return;
 		contentLoaded=true;
 		reloadFromContent();
 	}
 	public static final String IS_INSTANCE_ON_MEMORY = "isInstanceOnMemory";
-	//public static final String PROTOTYPE = "prototype";
-	//public static final String CONSTRUCTOR = "constructor";
 	public static final String CALLSUPER="callSuper";
+
 	//private static final Object GETTERKEY = "[[110414_051952@"+Origin.uid+"]]";
 	//Scriptable __proto__;
 	Map<Object, Object>_binds=new HashMap<Object, Object>();
@@ -75,6 +76,37 @@ public class DocumentScriptable implements Function {
     private static final String DOLLAR="$";
 	public static final String ONUPDATEINDEX = "onUpdateIndex";
 	static int cnt=0;
+	Scriptable scope=null;
+	boolean scopeLoaded=false;
+	public synchronized Scriptable getScope() {
+		if (scopeLoaded) return scope;
+        scopeLoaded=true;
+		//loadContent();
+        String ss=getDocument().scope;
+		if (ss==null || ss.length()==0) {
+			//scope=(Scriptable) binds().get(DocumentRecord.ATTR_SCOPE);
+			return null;
+		} else {
+			try {
+				Map<Object, Object> m=(Map)JSON.decode(ss);
+				Scriptable res=new BlankScriptableObject();
+				for (Map.Entry e:m.entrySet()) {
+					ScriptableObject.putProperty(res, e.getKey()+"", loader.byId(e.getValue()+""));
+				}
+				scope=res;
+			} catch (Exception e) {
+				e.printStackTrace();
+				scope=null;
+			}
+		}
+		return scope;
+	}
+	public void setScope(Scriptable s) {
+		scope=s;
+    	binds().remove(DocumentRecord.ATTR_SCOPE);
+		scopeLoaded=true;
+	}
+
 	public DocumentRecord getDocument() {
 	    if (_d!=null) return _d;
 	    cnt++;
@@ -137,20 +169,6 @@ public class DocumentScriptable implements Function {
 			return getDocument().content;
 		}
 	};
-	/*BuiltinFunc compileFunc =new BuiltinFunc() {
-
-		@Override
-		public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-				Object[] args) {
-			CompileResult c = DocumentLoader.curJsSesssion().compile(DocumentScriptable.this);
-			if (c==null) return DocumentScriptable.this;
-			if (c instanceof CompileResultScriptable) {
-				CompileResultScriptable cs = (CompileResultScriptable) c;
-				return cs.scriptable;
-			}
-			return c;
-		}
-	};*/
 	BuiltinFunc hasOwnPropFunc= new BuiltinFunc() {
 
 		@Override
@@ -160,45 +178,6 @@ public class DocumentScriptable implements Function {
 			return binds().containsKey(args[0]);
 		}
 	};
-	/*BuiltinFunc getBlobFunc= new BuiltinFunc() {
-
-		@Override
-		public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-				Object[] args) {
-			loadContent();
-			SFile f = FileSyncer.getBlobFile(loader.getDocumentSet(), DocumentScriptable.this);
-			return new AttachedBinData(f);
-		}
-	};
-	BuiltinFunc setBlobFunc= new BuiltinFunc() {
-
-		@Override
-		public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-				Object[] args) {
-			if (args.length==0) return false;
-			loadContent();
-			InputStream  str=null;
-			if (args[0] instanceof InputStream) {
-				str = (InputStream) args[0];
-			}
-			if (args[0] instanceof BinData) {
-				BinData b = (BinData) args[0];
-				try {
-					str= b.getInputStream();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (str!=null) {
-				try {
-					FileSyncer.setBlob(DocumentScriptable.this, str);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			return null;
-		}
-	};*/
 	int callsuperlim=0;
 	BuiltinFunc callSuperFunc =new BuiltinFunc() {
 
@@ -225,28 +204,7 @@ public class DocumentScriptable implements Function {
 						}
 					}
 				}
-			}/*
-			Scriptable proto = DocumentScriptable.this.getPrototype();
-			Log.d(this, "proto = "+proto);
-			callsuperlim++;if (callsuperlim>10) {
-				callsuperlim=0;Log.die("stackover?");
 			}
-			Scriptable p = proto.getPrototype();
-			Log.d(this, "proto.p = "+p);
-			if (p!=null && args.length>0) {
-
-				Object fo = p.get(args[0]+"", p);
-				if (fo instanceof Function) {
-					Function f = (Function) fo;
-
-					Object[] argShift=new Object[args.length-1];
-					for (int i=0 ; i<argShift.length ; i++) {
-						argShift[i]=args[i+1];
-					}
-					Log.d(this, "Calling superclass function "+cx.decompileFunction(f,0));
-					return f.call(cx, scope, thisObj, argShift);
-				}
-			}*/
 			return null;
 		}
 	};
@@ -276,6 +234,10 @@ public class DocumentScriptable implements Function {
         if (("_"+DocumentRecord.OWNER).equals(key)) return d.owner;
         if ("_summary".equals(key)) return d.summary;
         if ("_version".equals(key)) return d.version;
+        if (("_"+DocumentRecord.ATTR_CONSTRUCTOR).equals(key) || DocumentRecord.ATTR_CONSTRUCTOR.equals(key)) {
+        	return getConstructor();
+        }
+        if (("_"+DocumentRecord.ATTR_SCOPE).equals(key) || DocumentRecord.ATTR_SCOPE.equals(key)) return getScope();
         // end of use followings instead.
 
 		/*if (key instanceof DocumentScriptable) {
@@ -300,6 +262,15 @@ public class DocumentScriptable implements Function {
 		put(GETTERKEY, g);
 	}*/
 	public Object put(Object key,Object value) {
+		if (("_"+DocumentRecord.ATTR_SCOPE).equals(key) || DocumentRecord.ATTR_SCOPE.equals(key)) {
+			setScope((Scriptable)value);
+			return value;
+		}
+		if (("_"+DocumentRecord.ATTR_CONSTRUCTOR).equals(key) || DocumentRecord.ATTR_CONSTRUCTOR.equals(key)) {
+			setConstructor((Scriptable)value);
+			return value;
+		}
+
 		/*if (key instanceof DocumentScriptable) {
 			DocumentScriptable s = (DocumentScriptable) key;
 			binds.put(JSSession.idref(s, d.documentSet),value);
@@ -375,23 +346,56 @@ public class DocumentScriptable implements Function {
 		}*/
 		return res;
 	}
-
+	void trace(Object msg) {
+		if (id().equals("13892.1.2010.tonyu.jp")) {
+			Log.d("loadconst", msg);
+		}
+	}
 	@Override
 	public Scriptable getParentScope() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	public Scriptable getConstructor() {
-		Object cons = binds().get(Scriptables.CONSTRUCTOR);
+		/*for (int i=0 ; i<2 ; i++) {*/
+			String c=getDocument().constructor;
+			//trace("i="+i+", c="+c);
+			if (c!=null && c.length()>0) {
+				if ("Function".equals(c)) {
+					return loader.jsSession().funcFactory;
+				} else {
+					return loader.byId(c);
+				}
+			}
+			/*loadContent();
+		}*/
+		/*Object cons = binds().get(Scriptables.CONSTRUCTOR);
+		trace("Cons - get" +cons);
 		if (cons instanceof Scriptable) {
 			Scriptable s = (Scriptable) cons;
 			return s;
-		}
+		}*/
 		return null;
+	}
+	public void setConstructor(Scriptable s) {
+		trace("Set const s="+s);
+		if (s instanceof DocumentScriptable) {
+			DocumentScriptable ds = (DocumentScriptable) s;
+			getDocument().constructor=ds._id;
+			binds().remove(DocumentRecord.ATTR_CONSTRUCTOR);
+		} else if (s instanceof Function) {
+			getDocument().constructor="Function";
+			binds().remove(DocumentRecord.ATTR_CONSTRUCTOR);
+		} else {
+			Log.die(s+" cannot be a constructor");
+		}
+    	binds().remove(DocumentRecord.ATTR_CONSTRUCTOR);
+
 	}
 	@Override
 	public Scriptable getPrototype() {
 		Scriptable s=getConstructor();
+		trace("Get const s="+s);
 		if (s==null) return null;
 		Object res=s.get(Scriptables.PROTOTYPE,s);
 		if (res instanceof Scriptable) {
@@ -435,6 +439,7 @@ public class DocumentScriptable implements Function {
 	@Override
 	public void put(String name, Scriptable start, Object value) {
 		//if (name.equals("contentEquals")) Log.die("Who set it?");
+		trace("put "+name +" = "+value);
 		put(name,value);
 	}
 
@@ -455,13 +460,47 @@ public class DocumentScriptable implements Function {
 		//this.__proto__= prototype;
 	}
 	public void save() {
-		refreshSummary();
+		refreshRecordAttrs();
 		refreshContent();
 		Log.d(this, "save() content changed to "+getDocument().content);
 		//Thread.dumpStack();
 		PairSet<String,String> updatingIndex = indexUpdateMap();
 		loader.save(getDocument(), updatingIndex);
 		//loader.getDocumentSet().save(d,updatingIndex);// d.save();
+	}
+	private void refreshRecordAttrs() {
+		refreshSummary();
+		refreshScope();
+		refreshConstructor();
+	}
+	private void refreshConstructor() {
+		Scriptable con = getConstructor();
+		if (con instanceof Scriptable) {
+			setConstructor(con);
+		}
+	}
+	private void refreshScope() {
+		final Map r=new HashMap();
+		Scriptable s=getScope();
+		if (s==null) {
+			getDocument().scope=null;
+			return;
+		}
+		Scriptables.each(scope, new StringPropAction() {
+
+			@Override
+			public void run(String key, Object value) {
+			    if (value instanceof DocumentScriptable) {
+                    DocumentScriptable ds=(DocumentScriptable) value;
+                    r.put(key, ds.id());
+                } else {
+                    Log.d(this,"Cannot :"+DocumentScriptable.this+"["+key+"]="+value+";");
+                }
+			}
+		});
+		getDocument().scope=JSON.encode(r);
+		Log.d(this, "Scope changed to - "+getDocument().scope);
+		binds().remove(DocumentRecord.ATTR_SCOPE);
 	}
 	public void updateIndex() {
 		PairSet<String,String> updatingIndex = indexUpdateMap();
@@ -546,7 +585,7 @@ public class DocumentScriptable implements Function {
 		if (c.length()>10000) c=c.substring(0,10000);
 		Log.d(System.identityHashCode(this), "setContentAndSave() content changed to "+c);
 		loader.loadFromContent(content, this);
-		refreshSummary();
+		refreshRecordAttrs();
 		PairSet<String,String> idx = indexUpdateMap();
 		loader.save(d, idx);
 		//loader.getDocumentSet().save(d, idx);//d.save();
@@ -555,8 +594,9 @@ public class DocumentScriptable implements Function {
 	    DocumentRecord d=getDocument();
 	    assert d.content!=null;
 		if (d.content==null) return; //Log.die("Content of "+d.id+" is null!");
+		trace("Reading content - "+d.content);
 		loader.loadFromContent(d.content, this);
-		refreshSummary();
+		refreshRecordAttrs();
 	}
 	@Override
 	public String toString() {
@@ -643,7 +683,7 @@ public class DocumentScriptable implements Function {
 		if (name!=null) {
 			Scriptable scope2=new BlankScriptableObject();
 			ScriptableObject.putProperty(scope2, name, this);
-			ScriptableObject.putProperty(d, HttpContext.ATTR_SCOPE, scope2);
+			ScriptableObject.putProperty(d, DocumentRecord.ATTR_SCOPE, scope2);
 		}
 		/*Scriptable p=getPrototype();
 		if (p!=null) {*/
@@ -672,5 +712,17 @@ public class DocumentScriptable implements Function {
     public void loadRecord(DocumentRecord d) {
         Log.d(this , "Loaded ! "+d);
         _d=d;
+    }
+    public void convert() {
+    	Object oldScope=binds().get(DocumentRecord.ATTR_SCOPE);
+    	Object oldConst=binds().get(DocumentRecord.ATTR_CONSTRUCTOR);
+    	if (oldScope instanceof Scriptable) {
+			Scriptable s = (Scriptable) oldScope;
+			setScope(s);
+		}
+    	if (oldConst instanceof Scriptable) {
+			Scriptable s = (Scriptable) oldConst;
+			setConstructor(s);
+		}
     }
 }

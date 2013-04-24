@@ -82,6 +82,7 @@ public class JSSession {
     JSSession() {
         Context c=Context.enter();
         root=initObject(c);
+        funcFactory=(Function) ScriptableObject.getProperty(root, "Function");
         objFactory=(Function) ScriptableObject.getProperty(root, "Object");
         aryFactory=(Function) ScriptableObject.getProperty(root, "Array");
         utils=(Scriptable) ScriptableObject.getProperty(root, UTIL);
@@ -137,7 +138,7 @@ public class JSSession {
             return scope;
         }
     };
-    Function objFactory, aryFactory;
+    Function objFactory, aryFactory, funcFactory;
     Scriptable utils;
     public Scriptable newObject() {
         return (Scriptable) withContext(new ContextRunnable() {

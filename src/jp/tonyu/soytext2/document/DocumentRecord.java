@@ -39,8 +39,9 @@ public class DocumentRecord extends JDBCRecord /*implements Wrappable*/ {
 			    "");*/
 	@Override
 	public String[] columnOrder() {
-		return new String[]{"id","lastUpdate","createDate","lastAccessed","language","version",
-				"summary","preContent","content","owner","group","permission"
+		return new String[]{"id",LASTUPDATE,"createDate","lastAccessed","language","version",
+				"summary",ATTR_CONTENT,OWNER,"group","permission",
+				ATTR_CONSTRUCTOR, ATTR_SCOPE
 		};
 	}
 	@Override
@@ -50,11 +51,16 @@ public class DocumentRecord extends JDBCRecord /*implements Wrappable*/ {
 	//private DocumentSet documentSet;
 	public String id;
 	public long lastUpdate,createDate,lastAccessed;
-	public String summary,content,preContent;
+	public String summary,content;
 	public String language="javascript";
 	public String version="";
 	public String owner="",group="",permission="";
+	public String constructor="", scope="";
 	public static final String OWNER="owner",LASTUPDATE="lastUpdate",LASTUPDATE_DESC="-lastUpdate";
+	public static final String ATTR_CONTENT="content"; //"[[110414_052728@"+Origin.uid+"]]";
+	public static final String ATTR_SCOPE = "scope";
+	public static final String ATTR_CONSTRUCTOR = "constructor";
+
 	/*public DocumentRecord(String id) {
 		//this.documentSet=documentSet;
 		this.id=id;

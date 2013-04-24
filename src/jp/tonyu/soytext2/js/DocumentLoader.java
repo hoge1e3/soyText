@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 import jp.tonyu.db.NotInReadTransactionException;
 import jp.tonyu.db.NotInWriteTransactionException;
 import jp.tonyu.debug.Log;
+import jp.tonyu.js.BlankScriptableObject;
 import jp.tonyu.js.BuiltinFunc;
 import jp.tonyu.js.ContextRunnable;
 import jp.tonyu.js.Scriptables;
@@ -66,6 +67,7 @@ import jp.tonyu.util.Ref;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 
 public class DocumentLoader implements Wrappable, IDocumentLoader {
     public static final jp.tonyu.util.Context<DocumentLoader> cur=new jp.tonyu.util.Context<DocumentLoader>();
@@ -105,30 +107,6 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             s.reloadFromContent();
         }
     }
-    /*
-     * private Scriptable instanciator(final DocumentRecord src) { return new
-     * BlankScriptableObject() { private static final long serialVersionUID =
-     * -3858849843957575405L;
-     *
-     * @Override public Object get(String name, Scriptable start) { if
-     * ("create".equals(name)) { // src ! create. (in dolittle) return new
-     * BuiltinFunc() {
-     *
-     * @Override public Object call(Context cx, Scriptable scope, Scriptable
-     * thisObj, Object[] args) { DocumentScriptable res =
-     * DocumentLoader.this.defaultDocumentScriptable(src); if (args.length>=1) {
-     * res.setPrototype(byId(args[0]+"")); } return res; } }; } if
-     * ("newInstance".equals(name)) { // new func() return new BuiltinFunc() {
-     *
-     * @Override public Object call(Context cx, Scriptable scope, Scriptable
-     * thisObj, Object[] args) { DocumentScriptable res =
-     * DocumentLoader.this.defaultDocumentScriptable(src); if (args.length>=1) {
-     * DocumentScriptable func = byId(args[0]+""); Object proto =
-     * func.get("prototype"); if (proto instanceof Scriptable) { Scriptable sc =
-     * (Scriptable) proto; res.setPrototype(sc); } } return res; } }; }
-     *
-     * Log.die(name+" not found "); return super.get(name, start); } }; }
-     */
     /*
      * $.byId(id) returns some DocumentScriptable even if it is not exist.
          it is for lazy loading of DocumentRecord to avoid much queries.
@@ -248,10 +226,24 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         if (newContent==null)
             Log.die("New content is null!");
         dst.clear();
-        DocumentLoaderScriptable loaderScope=new DocumentLoaderScriptable(jsSession().root, this, dst);
         try {
-            jsSession().eval(dst+"", newContent, loaderScope);
-            dst.put(HttpContext.ATTR_SCOPE, loaderScope.scope());
+            Scriptable s=dst.getScope();
+            if (s!=null) {
+            	BlankScriptableObject sc=new BlankScriptableObject();
+            	sc.setParentScope(jsSession().root);
+            	Scriptables.extend(sc, s);
+            	ScriptableObject.putProperty(sc, "$", this);
+            	ScriptableObject.putProperty(sc, "_", dst);
+                ScriptableObject.putProperty(sc, "db", new DBHelper(this) );
+            	dst.trace("ld1 "+newContent);
+            	jsSession().eval(dst+"", newContent, sc);
+            } else {
+            	DocumentLoaderScriptable loaderScope=new DocumentLoaderScriptable(jsSession().root, this, dst);
+            	jsSession().eval(dst+"", newContent, loaderScope);
+            	dst.trace("ld2 "+newContent);
+            	dst.setScope(loaderScope.scope());
+            	//dst.put(HttpContext.ATTR_SCOPE, loaderScope.scope());
+            }
         } catch (Exception e) {
             e.printStackTrace();
             Log.e(e);
@@ -277,18 +269,6 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     public JSSession jsSession() {
         return jsSession; // JSSession.cur.get();
     }
-    /*private DocumentScriptable newDocument(final String id, final String owner) {
-        final Ref<DocumentScriptable> res=Ref.create(null);
-        ltr.write(new LooseWriteAction() {
-            @Override
-            public void run() throws NotInWriteTransactionException {
-                DocumentRecord d=getDocumentSet().newDocument(id);
-                d.owner=owner;
-                res.set(defaultDocumentScriptable(d));
-            }
-        });
-        return res.get();
-    }*/
 
     public DocumentScriptable newDocument(final String id) {
         final Ref<DocumentScriptable> res=Ref.create(null);
@@ -331,10 +311,6 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         extend(res, hash);
         return res;
     }
-    /*public void search(String cond, Scriptable tmpl, final Function iter) {
-        final Query q=newQuery(cond, tmpl);
-        searchByQuery(q, iter);
-    }*/
     /*
      * private Map<String, String> extractIndexExpr(QueryExpression e) throws
      * NotInReadTransactionException { final Map<String, String> idxs=new
@@ -445,27 +421,6 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             }
         });
     }
-    /*public Query newQuery(String cond, Scriptable tmpl) {
-        final QueryBuilder qb=QueryBuilder.create(cond);
-        if (tmpl!=null) {
-            Scriptables.each(tmpl, new StringPropAction() {
-                @Override
-                public void run(String key, Object value) {
-                    AttrOperator op=AttrOperator.ge;
-                    if (value instanceof String) {
-                        String svalue=(String) value;
-                        if (svalue.startsWith("=")) {
-                            op=AttrOperator.exact;
-                            value=svalue.substring(1);
-                        }
-                    }
-                    qb.tmpl(key, value, op);
-                }
-            });
-        }
-        final Query q=qb.toQuery();
-        return q;
-    }*/
     /*
      * (non-Javadoc)
      *
@@ -475,40 +430,15 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     public void extend(final DocumentScriptable dst, Scriptable src) {
         if (src==null)
             return;
+        dst.trace("extend src="+src);
         Scriptables.each(src, new StringPropAction() {
             @Override
             public void run(String key, Object value) {
-            	/*String str=(String) key;
-                Matcher m=idpatWiki.matcher(str);
-                if (m.matches()) {
-                    String id=m.group(1);
-                    DocumentScriptable refd=byIdOrNull(id);
-                    if (refd==null)
-                        Log.die("[["+id+"]] not found");
-                    dst.put(refd, value);
-                } else {*/
+                dst.trace("extend key="+key+" val="+value);
                     dst.put(key, value);
-                //}
             }
         });
-        /*
-         * for (Object key:hash.getIds()) { if (key instanceof String) { String
-         * str = (String) key; Matcher m=idpatWiki.matcher(str); Object value =
-         * hash.get(str, null); if (m.matches()) { String id=m.group(1);
-         * //Log.d(this, "Put "+dst.getDocument().id+" . "+id+" = "+value);
-         * DocumentScriptable refd = byId(id); if (refd==null)
-         * Log.die("[["+id+"]] not found"); dst.put(refd, value); } else {
-         * dst.put(key, value); } } }
-         */
     }
-    /*public void setGetter(DocumentScriptable dst, final Function func) {
-        dst.setGetter(new Getter() {
-            @Override
-            public Object getFrom(Object src) {
-                return jsSession().call(func, new Object[] { src });
-            }
-        });
-    }*/
     @Override
     public Wrappable javaNative(String className) {
         try {
@@ -572,15 +502,6 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             Log.d(this, "Using - "+f+" as authlist");
             jsSession.call(f, new Object[] { authList });
         }
-        /*
-         * QueryBuilder qb=QueryBuilder.create("authenticatorList:true");
-         * searchByQuery(qb.toQuery(), new BuiltinFunc() {
-         *
-         * @Override public Object call(Context cx, Scriptable scope, Scriptable
-         * thisObj, Object[] args) { Function f=(Function) args[0]; Log.d(this,
-         * "Using - "+f+" as authlist"); f.call(cx, scope, f, new
-         * Object[]{auth}); return true; } });
-         */
         return authList;
     }
     private void copyDocumentExceptDates(DocumentRecord src, DocumentRecord dst) throws SQLException {

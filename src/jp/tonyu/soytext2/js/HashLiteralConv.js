@@ -36,14 +36,14 @@ SoyText.generateContent=function (d) {
 		   return rept("    ",this.indentC);
 	   }
 	};
-	if (d.scope) {
+	/*if (d.scope) {
 		for (var k in d.scope) {
 			var value=d.scope[k];
 			buf+="var "+k+"="+expr(value ,ctx)+";\n";
 			var id=isDocument(value);
 			if (id) ctx.d2sym[id]=k;
 		}
-	}
+	}*/
 	buf+="$.extend(_,"+hash(d,ctx)+");"
 	return buf;
 

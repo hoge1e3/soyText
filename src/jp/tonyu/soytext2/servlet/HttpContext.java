@@ -80,7 +80,8 @@ public class HttpContext implements Wrappable {
 	private static final String SEL = "sel_";
 	public static final jp.tonyu.util.Context<HttpContext> cur=new jp.tonyu.util.Context<HttpContext>();
 	private static final String SESSION_NAME = "soyText_Session";
-	public static final String ATTR_OWNER="owner";
+	public static final String ATTR_BODY = "body";
+
 	//private static final String USERNAME = "soyText_UserName";
 	/*public final soytext.script.Context context= new soytext.script.Context(true);
 	public SessionManager sessionManager() {
@@ -141,8 +142,7 @@ public class HttpContext implements Wrappable {
 
 	static final String OP_="OP_";
 	//public static final String headAttr="_head";
-	public static final String ATTR_CONTENT="content"; //"[[110414_052728@"+Origin.uid+"]]";
-	public static final String ATTR_BODY = "body";
+
 	public static final String AJAXTAG = "AJAXTAG:";
 	public static final String ATTR_ARGUMENTORDER="argumentOrder";
 
@@ -150,8 +150,6 @@ public class HttpContext implements Wrappable {
 
 	Map<String,String> _params=null;
 	static final String ATTR_FORMAT = "_format";
-	static final String ATTR_PRECONTENT = "precontent";
-	public static final String ATTR_SCOPE = "scope";
 	private static final String DOGET = "doGet";
 
     public Map<String,String> params() {
@@ -169,51 +167,6 @@ public class HttpContext implements Wrappable {
 		_params=res;
 		return res;
 	}
-    /*public void downloadJar(String dbid, String []ids) throws IOException, SQLException, ClassNotFoundException {
-    	JarDownloader.startDownload(this, dbid, (SDB)documentSet(), ids);
-    }*/
-
-    /*public Map<String,Object> params(final Map<String, ?> typeHints) {
-    	final Map<String, String> p = params();
-    	final Map<String,Object> res=new HashMap<String, Object>();
-    	Maps.entries(p).each(new MapAction<String, String>() {
-
-			@Override
-			public void run(String key, String value) {
-				String type = typeHints.get(key)+"";
-				Object o;
-				if (value==null) {
-					o=null;
-				} else	if (type.startsWith("?doc")) {
-					Matcher m = DocumentProcessor.idpatWiki.matcher(value);
-					String id;
-					if (m.lookingAt()) {
-						id=m.group(1);
-					} else id=value;
-					o=documentLoader.byIdOrNull(id);
-				} else 	if (type.startsWith("?str")) {
-					o=value;
-				} else {
-					Matcher m = DocumentProcessor.idpatWiki.matcher(value);
-					String id;
-					if (m.lookingAt()) {
-						id=m.group(1);
-						o=documentLoader.byIdOrNull(id);
-					} else {
-						m = Literal.DQ.matcher(value);
-						if (m.lookingAt()) {
-							o=Literal.fromQuoteStrippedLiteral(m.group(1));
-						} else {
-							o=value;
-						}
-					}
-				}
-				Log.d("Param", key+"="+key+" o="+o+" src="+value+" type="+type);
-				res.put(key,o);
-			}
-		});
-    	return res;
-    }*/
     String nativePrefix="ROM";
 	public String[] args() {
     	String str=req.getPathInfo();
@@ -820,7 +773,7 @@ public class HttpContext implements Wrappable {
 		}
 		String msg="";
 		if (req.getMethod().equals("POST")) {
-			content=params().get(ATTR_CONTENT);
+			content=params().get(DocumentRecord.ATTR_CONTENT);
 			String[] reqs = getRequires();
 			ContentChecker c=new ContentChecker(content,addedVars(),reqs);
 			String id=params().get("id");
@@ -839,15 +792,14 @@ public class HttpContext implements Wrappable {
 		}
 		Httpd.respondByString(res, Html.p("<html><title>New Document</title>"+
 				"<body><form action=%a method=POST>%s"+
-				"<!--preContent: <br/>\n"+
-				"<input name=%a /><br/-->\n"+
 				"Requires: <input name=requires><BR>"+
 				"Content: <br/>\n"+
 				"<textarea id=edit name=%a rows=25 cols=60>%t</textarea><br/>"+
 				"ID(optional): <input name=id><br/>"+
 				"<input type=submit>"+
 				"</form>"+indentAdap()+"</body></html>",
-				 "./new", msg, ATTR_PRECONTENT, ATTR_CONTENT , content)
+				 "./new", msg,
+				 DocumentRecord.ATTR_CONTENT , content)
 		);
 	}
 	private String[] getRequires() {
@@ -919,7 +871,7 @@ public class HttpContext implements Wrappable {
 		}
 		String content = target.getDocument().content;
 		if (req.getMethod().equals("POST")) {
-			content=params().get(ATTR_CONTENT);
+			content=params().get(DocumentRecord.ATTR_CONTENT);
 			String[] reqs = getRequires();
 			ContentChecker c=new ContentChecker(content,addedVars(),reqs);
 			if (c.check()) {
@@ -929,23 +881,22 @@ public class HttpContext implements Wrappable {
 			content=c.getChangedContent();
 			msg=contentStatus(c);
 		}
-		String preContent = target.getDocument().preContent;
 		Httpd.respondByString(res, menuBar()+Html.p(
 				"<form action=%a method=POST>%s"+
-				"<!--preContent: <br/>\n"+
-				"<input name=%a value=%a /><br/-->"+
 				"Requires: <input name=requires><BR>"+
 				"Content: <br/>\n"+
 				"<textarea id=edit name=%a rows=20 cols=80>%t</textarea><br/>\n"+
 				"Owner: <input name=%a value=%a/><br/>\n"+
+				"Scope: <textarea id=edit name=%a rows=5 cols=80>%t</textarea><br/>\n"+
+				"Constructor: <input name=%a value=%a/><br/>\n"+
 				"<input type=submit>"+
 				"</form>"+indentAdap()+"</body></html>",
-				"./"+id,
-				msg,
-				HttpContext.ATTR_PRECONTENT,
-				preContent==null?"":preContent,
-						ATTR_CONTENT, content,
-						ATTR_OWNER, target.getDocument().owner)
+					"./"+id,msg,
+					DocumentRecord.ATTR_CONTENT, content,
+					DocumentRecord.OWNER, target.getDocument().owner,
+					DocumentRecord.ATTR_SCOPE, target.getDocument().scope,
+					DocumentRecord.ATTR_CONSTRUCTOR, target.getDocument().constructor
+				)
 		);
 
 	}
@@ -980,7 +931,7 @@ public class HttpContext implements Wrappable {
 					"<textarea id=edit name=%a rows=20 cols=80>%t</textarea>"+
 					"<input type=submit>"+
 					"</form>"+indentAdap()+"</body></html>",
-					"./"+id, HttpContext.ATTR_BODY, d.get(ATTR_BODY)+"")
+					"./"+id, ATTR_BODY, d.get(ATTR_BODY)+"")
 			);
 		}
 	}
