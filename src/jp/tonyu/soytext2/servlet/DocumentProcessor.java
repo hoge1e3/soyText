@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import jp.tonyu.soytext2.document.DocumentRecord;
 import jp.tonyu.soytext2.document.DocumentSet;
 import jp.tonyu.soytext2.js.DocumentScriptable;
 import jp.tonyu.util.SFile;
@@ -326,17 +327,26 @@ public class DocumentProcessor {
 			//String str = getContentStr(req);
 
 			Map<String,String> keys=params();//  HttpUtility.ParseQueryString(str);
-			if (keys.containsKey(HttpContext.ATTR_OWNER)) {
-				String o=keys.get(HttpContext.ATTR_OWNER);
+			if (keys.containsKey(DocumentRecord.OWNER)) {
+				String o=keys.get(DocumentRecord.OWNER);
 				if (o!=null && o.length()>0) {
 					d.getDocument().owner=o;
 				}
 			}
-			if (keys.containsKey(HttpContext.ATTR_CONTENT)) {
-				if (keys.containsKey(HttpContext.ATTR_PRECONTENT)) {
-					d.getDocument().preContent= keys.get(HttpContext.ATTR_PRECONTENT);
+			if (keys.containsKey(DocumentRecord.ATTR_SCOPE)) {
+				String o=keys.get(DocumentRecord.ATTR_SCOPE);
+				if (o!=null && o.length()>0) {
+					d.getDocument().scope=o;
 				}
-				d.setContentAndSave(keys.get(HttpContext.ATTR_CONTENT));
+			}
+			if (keys.containsKey(DocumentRecord.ATTR_CONSTRUCTOR)) {
+				String o=keys.get(DocumentRecord.ATTR_CONSTRUCTOR);
+				if (o!=null && o.length()>0) {
+					d.getDocument().scope=o;
+				}
+			}
+			if (keys.containsKey(DocumentRecord.ATTR_CONTENT)) {
+				d.setContentAndSave(keys.get(DocumentRecord.ATTR_CONTENT));
 			} else if (keys.containsKey(HttpContext.ATTR_BODY)) {
 				d.put(HttpContext.ATTR_BODY, keys.get(HttpContext.ATTR_BODY));
 				d.save();

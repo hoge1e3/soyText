@@ -34,16 +34,24 @@ SoyText.generateContent=function (d) {
 	   },
 	   curIndent:function () {
 		   return rept("    ",this.indentC);
-	   }
+	   },
+	   noConstructor:true
 	};
-	if (d.scope) {
+	/*if (d.scope) {
 		for (var k in d.scope) {
 			var value=d.scope[k];
 			buf+="var "+k+"="+expr(value ,ctx)+";\n";
 			var id=isDocument(value);
 			if (id) ctx.d2sym[id]=k;
 		}
-	}
+	}*/
+	if (d._scope) {
+        for (var k in d._scope) {
+            var value=d._scope[k];
+            var id=isDocument(value);
+            if (id) ctx.d2sym[id]=k;
+        }
+    }
 	buf+="$.extend(_,"+hash(d,ctx)+");"
 	return buf;
 
@@ -77,30 +85,21 @@ SoyText.generateContent=function (d) {
    	     //f=f+"";
 	     f=f.replace(/\r/g,"").replace(/^\n/,"").replace(/^\s*/,"").replace(/\n$/,"");
 	     return f;
-
-	     /*var fa= f.split(/\n/);
-	     var res=fa.map(function (line, no) {
-	    	 if (true) return line;
-	    	 return ctx.curIndent()+line;
-	     });
-	     res=res.join("\n");
-	     return res;*/
-	     /*f=f.replace(/\}$/,ctx.curIndent()+"}");
-	     if (f.substring(f.length-1, f.length)=="\n") {
-	    	 f=f.substring(0, f.length-1);
-	     }*/
 	}
 	function hash(h,ctx) {
 		var blessed;
 		if (isDocument(h.constructor)) { //} || typeof(h.constructor)=="function") {  in what case?
 			                             // It is comment out due to h.construcotr==Object or Array or what else
-			blessed=h.constructor;
+			if (!ctx.noConstructor) {
+			    blessed=h.constructor;
+			}
 		}
+        ctx.noConstructor=false;
 	   var res=(blessed?"$.bless("+expr(blessed,ctx)+",":"")+"{"+ctx.indentBr();
 	   var kv=[];
 	   for (var key in h) {
 		   if (h.hasOwnProperty && !h.hasOwnProperty(key)) continue;
-		   if (blessed && key=="constructor") continue;
+		   if (( ctx.noConstructor || blessed) && key=="constructor") continue;
 		   var value=h[key];
 		   kv.push([key,value]);
 	   }

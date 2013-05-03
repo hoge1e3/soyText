@@ -46,7 +46,7 @@ public class Log {
 	static HashSet<String> blackList=new HashSet<String>();
 	static boolean useWhiteList=false;
 	static {
-		String[] whiteLista=new String[] {};//"query","query-prep","JDBC","jp.tonyu.soytext2.document.SDB"};
+		String[] whiteLista=new String[] {"loadconst"};//"query","query-prep","JDBC","jp.tonyu.soytext2.document.SDB"};
 		String[] blackLista=new String[] {};
 		for (String s:whiteLista) {
 			whiteList.add(s);

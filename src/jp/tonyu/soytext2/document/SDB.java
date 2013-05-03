@@ -59,7 +59,8 @@ import net.arnx.jsonic.JSONException;
 public class SDB implements DocumentSet {
     // public static final String PRIMARY_DBID_TXT = "primaryDbid.txt";
     JDBCHelper helper;
-    static final int version=3;
+    public static final int CUR_DB_VERSION=4;
+    final int version;// no scope=3  scope=4
     TransactionMode mode;
     Workspace workspace;
     @Override
@@ -101,25 +102,6 @@ public class SDB implements DocumentSet {
             Log.die(e);
         }
     }
-    /*
-     * public void transaction(Object mode, final Runnable action) { try { if
-     * ("read".equalsIgnoreCase(mode+"")) { readTransaction(new DBAction() {
-     *
-     * @Override public void run(JDBCHelper db) throws SQLException {
-     * action.run(); } }, -1); } else if ("write".equalsIgnoreCase(mode+"")) {
-     * writeTransaction(new DBAction() {
-     *
-     * @Override public void run(JDBCHelper db) throws SQLException {
-     * action.run(); } }, -1); } else {
-     * Log.die("Invalid transaction mode: "+mode); } } catch (SQLException e) {
-     * e.printStackTrace(); }
-     *
-     * }
-     */
-    // public static final String UID_IMPORT =
-    // "77a729a1-5c5d-4d09-9141-72108ee9b634";
-    // public static final String UID_EXISTENT_FILE =
-    // "86e08ee0-0bd5-4d1f-a7f5-66c2251e60ad";
     public JDBCHelper getHelper() {
         return helper;
     }
@@ -130,8 +112,9 @@ public class SDB implements DocumentSet {
     SFile homeDir;
     public static Map<SFile, SDB> insts=new HashMap<SFile, SDB>();
     public static int instc=0;
-    public SDB(FileWorkspace workspace , String dbid) throws SQLException, ClassNotFoundException {
+    public SDB(FileWorkspace workspace , String dbid, int version) throws SQLException, ClassNotFoundException {
     	dbFile=workspace.getDBFile(dbid);
+    	this.version=version;
     	this.workspace=workspace;
     	Log.d(this, "DB file="+dbFile);
         // looseTransaction=new LooseTransaction(this);
@@ -141,7 +124,19 @@ public class SDB implements DocumentSet {
         helper=new JDBCHelper(conn, version) {
             @Override
             public Class<? extends JDBCRecord>[] tables(int version) {
-                return q(DocumentRecord.class, IndexRecord.class, IdSerialRecord.class);
+            	if (version==CUR_DB_VERSION) {
+                    return q(DocumentRecord.class, IndexRecord.class, IdSerialRecord.class);
+            	} else if (version==3){
+            		return q(DocumentRecordVer3.class, IndexRecord.class, IdSerialRecord.class);
+            	} else {
+            		Log.die("Invalid version - "+version);
+            		return null;
+            	}
+            }
+            @Override
+            protected void onUpgrade(Connection db, int oldVersion,
+            		int newVersion) throws SQLException {
+            	throw new NeedsUpgradeException(oldVersion, newVersion);
             }
         };
         conn.setAutoCommit(false);
@@ -342,7 +337,7 @@ public class SDB implements DocumentSet {
     private void save(final DocumentRecord d, final PairSet<String, String> indexValues, boolean realtimeBackup)
             throws SQLException, NotInWriteTransactionException {
     	//LogRecord log=logManager.write("save", d.id);
-        d.lastUpdate=logManager.timeStamp(); //log.id;
+        d.lastUpdate=publishTimestamp(); //log.id;
         d.version=d.lastUpdate+"@"+dbid;
         if (realtimeBackup) {
             try {
@@ -351,16 +346,21 @@ public class SDB implements DocumentSet {
                 e.printStackTrace();
             }
         }
-        /*
-         * reserveWriteTransaction(new DBAction() {
-         *
-         * @Override public void run(JDBCHelper db) throws SQLException {
-         */
         saveRaw(d);
         updateIndexInTransaction(d, indexValues);
-        /*
-         * } });
-         */
+    }
+    private long publishTimestamp() {
+        return logManager.timeStamp();
+    }
+    public void importRecord(DocumentRecord d) throws NotInWriteTransactionException {
+        // To avoid 404 link, Use only in importDocuments. You have to rebuild index of d later
+        d.lastUpdate=publishTimestamp();
+        try {
+            saveRaw(d);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 	private void saveRaw(final DocumentRecord d) throws SQLException,
 			NotInWriteTransactionException {
@@ -482,7 +482,7 @@ public class SDB implements DocumentSet {
             if (createdAtThisDB(d)) {
                 logManager.liftUpLastNumber(serialPart(d));
             }
-            d.lastAccessed=d.lastUpdate=logManager.timeStamp();  //log.id;
+            d.lastAccessed=d.lastUpdate=publishTimestamp();  //log.id;
              //log.id;
             // cache.put(d.id, d);
             return d;

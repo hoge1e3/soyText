@@ -18,20 +18,18 @@
 
 package jp.tonyu.soytext2.document;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.Map;
 
 import jp.tonyu.db.NotInReadTransactionException;
 import jp.tonyu.db.NotInWriteTransactionException;
 import jp.tonyu.db.TransactionMode;
-import jp.tonyu.soytext2.file.BinData;
-import jp.tonyu.soytext2.file.ReadableBinData;
 import jp.tonyu.soytext2.servlet.Workspace;
 
 public interface DocumentSet {
 	public DocumentRecord newDocument() throws NotInWriteTransactionException;
 	public DocumentRecord newDocument(String id) throws NotInWriteTransactionException;
+	public void importRecord(DocumentRecord d) throws NotInWriteTransactionException;
 	public void save(DocumentRecord d, PairSet<String,String> updatingIndex) throws NotInWriteTransactionException;
 	public void setVersion(DocumentRecord d, String version) throws NotInWriteTransactionException;
 	public void updateIndex(DocumentRecord d,PairSet<String,String> h) throws NotInWriteTransactionException;

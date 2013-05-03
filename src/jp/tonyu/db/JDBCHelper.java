@@ -42,7 +42,7 @@ import jp.tonyu.util.Util;
  */
 public abstract class JDBCHelper {
     static final String VERSION_TABLE = "jdbc_helper_version";
-    VersionRecord vr=new VersionRecord();
+    //VersionRecord vr=new VersionRecord();
     protected Connection db;
     private int version;
     public JDBCHelper(Connection db, final int version) throws SQLException {
@@ -51,24 +51,31 @@ public abstract class JDBCHelper {
         if (version<=0) {
             throw new RuntimeException("Version must be >0");
         }
-        initTable(VersionRecord.class);
         writeTransaction(new WriteAction() {
             @Override
             public void run(JDBCHelper jdbcHelper)
                     throws NotInWriteTransactionException, SQLException {
                 int oldVer=getOldVersion();
-                initTables();
-                if (oldVer==0) {
+                JDBCHelper.this.version=oldVer;
+                if (oldVer==0) {            	// new db
+                    initTables(version);
                     create(version);
-                } else if (oldVer!=version) {
+                   	JDBCHelper.this.version=version;
+                } else if (oldVer!=version) {            	// upgrade
+                    initTables(oldVer);
                     upgrade(oldVer,version);
+                    initTables(version);
+                   	JDBCHelper.this.version=version;
+                } else {         	// use existent
+                   	initTables(version);
                 }
-                JDBCHelper.this.version=version;
             }
         });
     }
 
-    private void initTables() throws SQLException {
+    private void initTables(int version) throws SQLException {
+    	tables.clear();
+        //initTable(VersionRecord.class);
         for (Class<? extends JDBCRecord> t:tables(version)) {
             //JDBCRecord r=recInstance(t);
             initTable(t);
@@ -76,18 +83,32 @@ public abstract class JDBCHelper {
     }
     private <T extends JDBCRecord> void createTableAndIndex(Class<T> r) throws SQLException {
         JDBCTable<T> tbl=table(r);
-        tbl.create();
-        tbl.createAllIndex();
+        if (tbl==null) Log.die("Table "+r+" does not exist");
+        createTableAndIndex(tbl);
     }
+	private <T extends JDBCRecord> void createTableAndIndex(JDBCTable<T> tbl) throws SQLException {
+		tbl.create();
+        tbl.createAllIndex();
+	}
     private <T extends JDBCRecord>void initTable(Class<T> t) throws SQLException {
-        JDBCTable<T> jdbcTable = new JDBCTable<T>(this , t);
+        JDBCTable<T> jdbcTable = createTableObj(t);
         tables.put(recInstance(t).tableName(), jdbcTable);
+    }
+
+	private <T extends JDBCRecord> JDBCTable<T> createTableObj(Class<T> t) throws SQLException {
+		JDBCTable<T> jdbcTable = new JDBCTable<T>(this , t);
+		return jdbcTable;
+	}
+    private JDBCTable<VersionRecord> createVersionTableObj() throws SQLException{
+    	JDBCTable<VersionRecord> jdbcTable = createTableObj(VersionRecord.class);
+    	return jdbcTable;
     }
 
     private int getOldVersion() throws SQLException, NotInReadTransactionException {
         int res=0;
-        if (!exists(VersionRecord.class)) return res;
-        JDBCRecordCursor<VersionRecord> r = table(VersionRecord.class).all();
+        JDBCTable<VersionRecord> versionTable = createVersionTableObj();
+        if (!versionTable.exists()) return res;
+		JDBCRecordCursor<VersionRecord> r = versionTable.all();
         while (r.next()) {
             VersionRecord v = r.fetch();
             res=v.version;
@@ -115,9 +136,10 @@ public abstract class JDBCHelper {
             Log.d("JDBC","Trans End");
             action.afterCommit(this);
         } catch(SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             db.rollback();
             action.afterRollback(this);
+            throw e;
         }
     }
     /*public void reserveWriteTransaction(WriteAction action) throws SQLException {
@@ -147,13 +169,14 @@ public abstract class JDBCHelper {
         setVersion(newVersion);
     }
     private void setVersion(int newVersion) throws SQLException, NotInWriteTransactionException {
-        JDBCTable<VersionRecord> table = table(vr);
-        if (!table.exists()) {
-            createTableAndIndex(VersionRecord.class);
+        JDBCTable<VersionRecord> vtable = createVersionTableObj();// table(vr);
+        if (!vtable.exists()) {
+            createTableAndIndex(vtable);
         }
-        table.deleteAll();
+        vtable.deleteAll();
+        VersionRecord vr=new VersionRecord();
         vr.version=newVersion;
-        table.insert(vr);
+        vtable.insert(vr);
     }
 
     private void upgrade(int oldVersion, int newVersion) throws SQLException, NotInWriteTransactionException {
@@ -196,7 +219,7 @@ public abstract class JDBCHelper {
         Log.d(this,"Closed");
     }
     Map<String, JDBCTable> tables=new HashMap<String, JDBCTable>();
-    public <T extends JDBCRecord> JDBCTable<T> table(String name) {
+    public JDBCTable table(String name) {
         return tables.get(name);//new JDBCTable(this , name);
     }
     public <T extends JDBCRecord> JDBCTable<T> table(T r) {
@@ -349,8 +372,8 @@ public abstract class JDBCHelper {
     static int cnt=0;
     private PreparedStatement prepareStatement(String q, Object... args)
             throws SQLException {
+        //Log.d(this, "Query-prep: "+q+" args="+Util.join(",", args));
         PreparedStatement st = db.prepareStatement(q);
-        Log.d(this, "Query-prep: "+q+" args="+Util.join(",", args));
         cnt++; //if (cnt>500) Log.die("Stop!");
         for (int i=0 ; i<args.length; i++) {
             if (args[i] instanceof String) {
@@ -395,6 +418,13 @@ public abstract class JDBCHelper {
                         return;
                     }
                     JDBCTable<?> t = table(r.tableName());
+                    if (!t.rec.getClass().equals(r.getClass())) {
+                    	System.out.println("version="+ version);
+                    	System.out.println(tables.get(r.tableName()));
+                    	System.out.println(JDBCHelper.this.tables.get(r.tableName()).rec);
+
+                    	Log.die("Record class does not match"+t+"!="+r);
+                    }
                     t.deleteAll();
                     for (Map<String,Object> m:value) {
                         r.copyFrom(m);

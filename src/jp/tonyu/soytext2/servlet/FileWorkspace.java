@@ -77,7 +77,7 @@ public class FileWorkspace implements Workspace {
 		File ff=f.javaIOFile();
 		SDB res=cache.get(ff);
 		if (res!=null) return res;
-		res=new SDB(this,dbid);
+		res=new SDB(this,dbid, SDB.CUR_DB_VERSION);
 		cache.put(ff, res);
 		return res;
 	}

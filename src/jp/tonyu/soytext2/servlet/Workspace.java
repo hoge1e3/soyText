@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import jp.tonyu.soytext2.document.DocumentSet;
-import jp.tonyu.soytext2.document.SDB;
 import jp.tonyu.util.SFile;
 
 public interface Workspace {

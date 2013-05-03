@@ -21,7 +21,7 @@ package jp.tonyu.soytext2.document;
 import jp.tonyu.db.JDBCRecord;
 
 
-public class DocumentRecord extends JDBCRecord /*implements Wrappable*/ {
+public class DocumentRecordVer3 extends JDBCRecord /*implements Wrappable*/ {
 
 	/*	db.createTable("CREATE TABLE "+DOCUMENT_1+"(\n"+
 			    "   id TEXT NOT NULL PRIMARY KEY,\n"+
@@ -39,9 +39,8 @@ public class DocumentRecord extends JDBCRecord /*implements Wrappable*/ {
 			    "");*/
 	@Override
 	public String[] columnOrder() {
-		return new String[]{"id",LASTUPDATE,"createDate","lastAccessed","language","version",
-				"summary",ATTR_CONTENT,OWNER,"group","permission",
-				ATTR_CONSTRUCTOR, ATTR_SCOPE
+		return new String[]{"id","lastUpdate","createDate","lastAccessed","language","version",
+				"summary","preContent","content","owner","group","permission"
 		};
 	}
 	@Override
@@ -51,7 +50,7 @@ public class DocumentRecord extends JDBCRecord /*implements Wrappable*/ {
 	//private DocumentSet documentSet;
 	public String id;
 	public long lastUpdate,createDate,lastAccessed;
-	public String summary,content;
+	public String summary,preContent,content;
 	public String language="javascript";
 	public String version="";
 	public String owner="",group="",permission="";
@@ -67,7 +66,7 @@ public class DocumentRecord extends JDBCRecord /*implements Wrappable*/ {
 	}*/
 	@Override
 	public String toString() {
-		return "(Document "+id+")";
+		return "(DocumentV3 "+id+")";
 	}
 	@Override
 	public String[] indexSpecs() {

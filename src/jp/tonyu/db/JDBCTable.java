@@ -204,11 +204,16 @@ public class JDBCTable<T extends JDBCRecord> {
         return scope(OrderBy.parse(singleColumnSpec),q(from),q(to));
     }
     public int insertValues(Object... values) throws SQLException, NotInWriteTransactionException {
-        return db.execUpdate("insert into "+nameSym()+"("
-                +columnNameList(columns.toArray(new Column[0]))+") values ("
+        Column[] names = columns.toArray(new Column[0]);
+        if (names.length!=values.length) Log.die("names values length not match "+names.length+"<>"+values.length);
+		return db.execUpdate("insert into "+nameSym()+"("
+                +columnNameList(names)+") values ("
                 +questions(values.length)+");", values);
     }
     public int insert(JDBCRecord r) throws SQLException, NotInWriteTransactionException {
+    	if (!r.getClass().equals(rec.getClass())) {
+    		Log.die("Record "+r+" cannot insert into "+ rec);
+    	}
         return insertValues(r.toValues());
     }
     public int updateValues(Object primaryKeyValue, Object... values)
