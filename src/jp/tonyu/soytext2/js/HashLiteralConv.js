@@ -48,8 +48,9 @@ SoyText.generateContent=function (d) {
 	if (d._scope) {
         for (var k in d._scope) {
             var value=d._scope[k];
-            var id=isDocument(value);
-            if (id) ctx.d2sym[id]=k;
+            if (isDocument(value)) {
+                ctx.d2sym[value._id]=k;
+            }
         }
     }
 	buf+="$.extend(_,"+hash(d,ctx)+");"
