@@ -496,7 +496,7 @@ public class DocumentScriptable implements Function {
 		Object ouio = ScriptableObject.getProperty(this, ONUPDATEINDEX);
 		if (ouio instanceof Function) {
 			Function oui=(Function)ouio;
-			loader.jsSession().call(oui, this, new Object[]{ new IndexUpdateContext(idx) } );
+			loader.jsSession().call(oui, this, new Object[]{ new IndexUpdateContext(this,idx) } );
 		}
 	}
 	private void mkClassIndex(	PairSet<String, String> idx) {
@@ -519,6 +519,13 @@ public class DocumentScriptable implements Function {
 	}
 	private static void mkBackLinkIndex(final Scriptable s, final PairSet<String,String> idx) {
 		if (s instanceof NativeJavaObject) return;
+		if (s instanceof DocumentScriptable) {
+            DocumentScriptable ds = (DocumentScriptable) s;
+            Scriptable scope=ds.getScope();
+            if (scope!=null) {
+                mkBackLinkIndex(scope, idx);
+            }
+        }
 		Scriptables.each(s, new AllPropAction() {
 			@Override
 			public void run(Object key, Object value) {
