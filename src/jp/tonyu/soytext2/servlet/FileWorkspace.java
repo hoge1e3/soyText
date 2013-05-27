@@ -178,5 +178,8 @@ public class FileWorkspace implements Workspace {
 	private SFile confHome() {
 		return home.rel("conf");
 	}
-
+	@Override
+	public SFile globalHashBlobdir() {
+	    return home.rel("hashBlob");
+	}
 }

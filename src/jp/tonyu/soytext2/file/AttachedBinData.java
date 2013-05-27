@@ -36,7 +36,7 @@ public class AttachedBinData implements BinData, Wrappable {
 
 	@Override
 	public OutputStream getOutputStream() throws IOException {
-		return src.outputStream();
+		return  new WrappedOutputStream( src.outputStream() );
 	}
 
 	public AttachedBinData(SFile src) {

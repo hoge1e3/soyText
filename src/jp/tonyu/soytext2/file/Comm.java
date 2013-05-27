@@ -49,7 +49,11 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 public class Comm implements Wrappable {
-    public Scriptable exec(String rootPath, String relPath, Scriptable sparams ) throws ClientProtocolException, IOException {
+    public static final String RT_TEXT="text", RT_BIN="binary";
+    public Scriptable exec(String rootPath, String relPath, Scriptable sparams) throws ClientProtocolException, IOException {
+        return exec(rootPath, relPath, sparams, RT_TEXT);
+    }
+    public Scriptable exec(String rootPath, String relPath, Scriptable sparams, Object responseType ) throws ClientProtocolException, IOException {
         HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(rootPath+relPath);
         final List <NameValuePair> params = new Vector <NameValuePair>();
@@ -66,9 +70,12 @@ public class Comm implements Wrappable {
         httppost.setEntity(new UrlEncodedFormEntity(params, Consts.UTF_8));
 
         HttpResponse response=httpclient.execute(httppost);
-        return response2Scriptable(response);
+        return response2Scriptable(response,responseType);
     }
     public Scriptable execMultiPart(String rootPath, String relPath, final Scriptable sparams ) throws ClientProtocolException, IOException {
+        return execMultiPart(rootPath, relPath, sparams, RT_TEXT);
+    }
+    public Scriptable execMultiPart(String rootPath, String relPath, final Scriptable sparams,Object responseType ) throws ClientProtocolException, IOException {
         HttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost(rootPath+relPath);
         final MultipartEntity reqEntity = new MultipartEntity();
@@ -108,17 +115,22 @@ public class Comm implements Wrappable {
 
         Log.d(this,"executing request " + httppost.getRequestLine());
         HttpResponse response = httpclient.execute(httppost);
-        Scriptable res=response2Scriptable(response);
+        Scriptable res=response2Scriptable(response, responseType);
         return res;
     }
-    private Scriptable response2Scriptable(HttpResponse response)
+    private Scriptable response2Scriptable(HttpResponse response, Object responseType)
             throws IOException {
         HttpEntity resEntity = response.getEntity();
-        String resStr=EntityUtils.toString(resEntity);
         Scriptable res=new BlankScriptableObject();
-        Scriptables.put(res, "content", resStr);
+        if (RT_TEXT.equals(responseType)) {
+            String resStr=EntityUtils.toString(resEntity);
+            Scriptables.put(res, "content", resStr);
+            Log.d(this,resStr);
+        } else {
+            ByteArrayBinData data=new ByteArrayBinData(EntityUtils.toByteArray(resEntity));
+            Scriptables.put(res, "content", data);
+        }
         Scriptables.put(res, "statusLine", response.getStatusLine());
-        Log.d(this,resStr);
         Log.d(this,response.getStatusLine());
         if (resEntity != null) {
             Log.d(this,"Response content length: " + resEntity.getContentLength());

@@ -82,11 +82,7 @@ public class HttpContext implements Wrappable {
 	private static final String SESSION_NAME = "soyText_Session";
 	public static final String ATTR_BODY = "body";
 
-	//private static final String USERNAME = "soyText_UserName";
-	/*public final soytext.script.Context context= new soytext.script.Context(true);
-	public SessionManager sessionManager() {
-		return appCtx.sessionManager;
-	}*/
+
 	public boolean isRoot() {
 		/*String addr=req.getRemoteAddr();
 		Log.d("RMT", addr);
@@ -241,7 +237,7 @@ public class HttpContext implements Wrappable {
         Log.d(this,"qstr = "+req.getQueryString());
         DocumentScriptable root=documentLoader.rootDocument();
         if (!isRoot()) {
-            Object permitted=ScriptableObject.getProperty(root, "permittedROMCommands");
+            Object permitted=(root!=null ? ScriptableObject.getProperty(root, "permittedROMCommands") : null);
             boolean p=false;
             if (cmd!=null && permitted instanceof Scriptable) {
                 Scriptable perm=(Scriptable) permitted;
@@ -1237,32 +1233,7 @@ public class HttpContext implements Wrappable {
 	public static String ajaxTag(String string) {
 		return "<!--"+AJAXTAG+string+"-->";
 	}
-	/*public void importFromVer1() {
-		try {
-			URL u=new URL("http://localhost:3001/exec/110412_045800?after=1307074166184");
-			InputStream in=(InputStream)u.getContent();
-			File file = new File("import/import.txt");
-			Scanner sc=new Scanner(in);
-			PrintWriter w=new PrintWriter(file);
-			w.println("[Document]");
-			while (sc.hasNextLine()) {
-				String l=sc.nextLine();
-				if (l.startsWith("<pre>") || l.startsWith("</pre>")) continue;
-				w.println(l);
-				//System.out.println(l);
-			}
-			sc.close();
-			w.close();
 
-			Importer i=new Importer(documentLoader);
-			i.importDocuments(file);
-
-			all();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}*/
 	public void write(ReadableBinData data) throws IOException {
 		write(data.getInputStream());
 	}

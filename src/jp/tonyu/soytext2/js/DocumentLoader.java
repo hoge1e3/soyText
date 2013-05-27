@@ -473,7 +473,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             return authList;
         authList=new AuthenticatorList();
         DocumentScriptable r=rootDocument();
-        Object a=r.get("authenticator");
+        Object a=(r!=null ? r.get("authenticator") : null);
         if (a instanceof Function) {
             Function f=(Function) a;
             Log.d(this, "Using - "+f+" as authlist");

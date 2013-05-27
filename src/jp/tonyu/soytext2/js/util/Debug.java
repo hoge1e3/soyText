@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package jp.tonyu.soytext2.js;
+package jp.tonyu.soytext2.js.util;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -33,6 +33,7 @@ import jp.tonyu.debug.Log;
 import jp.tonyu.js.Scriptables;
 import jp.tonyu.js.StringPropAction;
 import jp.tonyu.js.Wrappable;
+import jp.tonyu.soytext2.js.LineInfo;
 
 public class Debug implements Wrappable {
 	public Object[] stackTrace(Object eo) {
@@ -94,6 +95,9 @@ public class Debug implements Wrappable {
 
 		}
 		return e;
+	}
+	public void d(Object tag,Object o) {
+	    Log.d(tag, o);
 	}
 	static Pattern docscr=Pattern.compile("Docscr ([^\\(\\)]+)[^:]*:(\\d+)");
 

@@ -28,7 +28,7 @@ import jp.tonyu.db.NotInWriteTransactionException;
 import jp.tonyu.db.TransactionMode;
 import jp.tonyu.debug.Log;
 import jp.tonyu.soytext2.document.LooseTransaction.Action;
-import jp.tonyu.soytext2.js.Debug;
+import jp.tonyu.soytext2.js.util.Debug;
 import jp.tonyu.db.ReadAction;
 
 public class LooseTransaction {

@@ -28,6 +28,8 @@ import jp.tonyu.js.Jslint;
 import jp.tonyu.js.Prototype;
 import jp.tonyu.js.Wrappable;
 import jp.tonyu.soytext2.document.DocumentSet;
+import jp.tonyu.soytext2.js.util.Blob;
+import jp.tonyu.soytext2.js.util.Debug;
 import jp.tonyu.soytext2.servlet.Auth;
 import jp.tonyu.util.MapAction;
 import jp.tonyu.util.Maps;
@@ -91,6 +93,7 @@ public class JSSession {
         ScriptableObject.putProperty(utils, "isDocument", HashLiteralConv.isDocument);
         ScriptableObject.putProperty(utils, "isHashBlob", HashLiteralConv.isHashBlob);
         ScriptableObject.putProperty(utils, "debug", new Debug());
+        ScriptableObject.putProperty(utils, "blob", new Blob());
         ScriptableObject.putProperty(utils, "safeEval", new SafeEval(root));
         ScriptableObject.putProperty(utils, "bindings", bindings);
         ScriptableObject.putProperty(utils, "contentChecker", newContentChecker);

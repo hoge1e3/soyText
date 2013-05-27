@@ -179,6 +179,10 @@ public class SDB implements DocumentSet {
         return blobDir.rel(id).javaIOFile();
     }
     public SFile getHashBlobDir() {
+        SFile f=workspace.globalHashBlobdir();
+        if(f.exists()) {
+            return f;
+        }
         return homeDir.rel("hashBlob");
     }
     @Override

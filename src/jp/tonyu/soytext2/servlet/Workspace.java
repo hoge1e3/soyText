@@ -25,4 +25,6 @@ public interface Workspace {
 			throws FileNotFoundException;
 
 	public SFile getConfig(Class<?> klass);
+
+    public abstract SFile globalHashBlobdir();
 }
