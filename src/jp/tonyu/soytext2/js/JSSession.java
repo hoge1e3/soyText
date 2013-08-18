@@ -234,7 +234,8 @@ public class JSSession {
         }
         cx=Context.enter();
         try {
-            // cx.setOptimizationLevel(-1);
+            //cx.setOptimizationLevel(-1);
+
             cx.setClassShutter(new ClassShutter() {
                 Map<String, Boolean> cache=new HashMap<String, Boolean>();
                 @Override

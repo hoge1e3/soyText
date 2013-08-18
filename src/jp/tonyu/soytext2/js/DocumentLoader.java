@@ -521,6 +521,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
         }
         for (DocumentScriptable ds : willReload) {
             Log.d(this, "Reloading ds: "+ds.getDocument().content);
+            ds.clearScope();
             ds.reloadFromContent();
         }
         for (String id : willUpdateIndex) {
@@ -528,16 +529,19 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             s.refreshIndex();
         }
     }
-    public void rebuildIndex() {
+    public void rebuildIndex(final int from, final int to) {
         JSSession.withContext(new ContextRunnable() {
             @Override
             public Object run(Context cx) {
                 ltr.write(new LooseWriteAction() {
+                    int count=0;
                     @Override
                     public void run() throws NotInWriteTransactionException {
                         documentSet.all(new UpdatingDocumentAction() {
                             @Override
                             public boolean run(DocumentRecord d) throws NotInWriteTransactionException {
+                                if (from>=0 && (count<from || count>to)) return false;
+                                count++;
                                 Log.d("rebuildIndex", d.id);// +" lastUpdate="+d.lastUpdate);
                                 DocumentScriptable s=byRecordOrCache(d);
                                 s.refreshIndex();

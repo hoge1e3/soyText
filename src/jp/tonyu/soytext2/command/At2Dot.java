@@ -64,16 +64,18 @@ public class At2Dot {
 		Map m=(Map)JSON.decode(sFile.inputStream());
 		List docs=(List)m.get("DocumentRecord");
 		Map<String,String> ids=new HashMap<String,String>();
-		List logs=(List)m.get("LogRecord");
-		Map<Integer, Date> lu2Date=new HashMap<Integer, Date>();
-		for (Object l:logs) {
-			Map log=(Map)l;
-			int id= Integer.parseInt(log.get("id")+"");
-			Date d = df.parse( log.get("date")+"" );
-			//d.to
-			lu2Date.put(id,d);
-			//System.out.println(id+"-"+d);
-		}
+		Map<Long, Date> lu2Date=new HashMap<Long, Date>();
+        List logs=(List)m.get("LogRecord");
+        if (logs!=null) {
+            for (Object l:logs) {
+                Map log=(Map)l;
+                long id= Long.parseLong(log.get("id")+"");
+                Date d = df.parse( log.get("date")+"" );
+                //d.to
+                lu2Date.put(id,d);
+                //System.out.println(id+"-"+d);
+            }
+        }
 		//System.exit(1);
 		int ser=0;
 		for (Object s:docs) {
@@ -88,6 +90,14 @@ public class At2Dot {
 			//System.out.println(newId);
 			doc.put("id", newId);
 
+			String scope=doc.get("scope")+"";
+			if (scope.compareTo("null")!=0) {
+	            doc.put("scope", scope.replaceAll("@","."));
+			}
+			String con=doc.get("constructor")+"";
+            if (con.compareTo("null")!=0) {
+                doc.put("constructor", con.replaceAll("@","."));
+            }
 
 			convertDate(lu2Date, doc, "lastUpdate");
 			convertDate(lu2Date, doc, "lastAccessed");
@@ -147,9 +157,9 @@ public class At2Dot {
 			}
 		}*/
 	}
-	private static void convertDate(Map<Integer, Date> lu2Date, Map doc,
+	private static void convertDate(Map<Long, Date> lu2Date, Map doc,
 			String key) {
-		int lu= Integer.parseInt(doc.get(key)+"");
+		long lu= Long.parseLong(doc.get(key)+"");
 		Date nlu = lu2Date.get(lu);
 		if (nlu==null) doc.put(key, 0 );
 		else doc.put(key, nlu.getTime() );

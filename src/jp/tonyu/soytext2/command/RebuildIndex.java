@@ -25,12 +25,14 @@ import jp.tonyu.soytext2.document.SDB;
 import jp.tonyu.soytext2.js.DocumentLoader;
 import jp.tonyu.soytext2.servlet.Workspace;
 import jp.tonyu.soytext2.servlet.FileWorkspace;
+import jp.tonyu.util.ArgsOptions;
 import jp.tonyu.util.SFile;
 
 public class RebuildIndex {
 	public static void main(String[] args) throws Exception {
 		FileWorkspace workspace=new FileWorkspace(new SFile("."));
-		String dbid=(args.length==0?workspace.getPrimaryDBID():args[0]);
+		ArgsOptions opt=new ArgsOptions(args);
+		String dbid=(opt.args.length==0?workspace.getPrimaryDBID():opt.args[0]);
 
 		/*File f;
 		if (args.length>0) {
@@ -40,7 +42,7 @@ public class RebuildIndex {
 		}*/
 		SDB s=workspace.getDB(dbid);// new SDB(f);
 		DocumentLoader d = new DocumentLoader(s);
-		d.rebuildIndex();
+		d.rebuildIndex( opt.getInt("from", -1), opt.getInt("to", -1) );
 		s.close();
 	}
 }

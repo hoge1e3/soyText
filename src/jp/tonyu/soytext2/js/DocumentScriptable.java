@@ -38,7 +38,6 @@ import jp.tonyu.soytext2.document.IndexRecord;
 import jp.tonyu.soytext2.document.PairSet;
 import jp.tonyu.soytext2.file.AttachedBinData;
 import jp.tonyu.soytext2.file.BinData;
-import jp.tonyu.soytext2.file.FileSyncer;
 import jp.tonyu.soytext2.servlet.HttpContext;
 import jp.tonyu.util.SFile;
 import jp.tonyu.util.SPrintf;
@@ -54,7 +53,8 @@ import org.mozilla.javascript.UniqueTag;
 import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 public class DocumentScriptable implements Function {
-	public static boolean lazyLoad=true;
+	private static final String UPDATE_INDEX = "updateIndex";
+    public static boolean lazyLoad=true;
 	boolean contentLoaded=!lazyLoad; // true iff loaded or loading
 	private synchronized void loadContent() {
 		if (contentLoaded) return;
@@ -148,12 +148,35 @@ public class DocumentScriptable implements Function {
 			return DocumentScriptable.this;
 		}
 	};
+    BuiltinFunc saveRawFunc =new BuiltinFunc() {
+
+        @Override
+        public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                Object[] args) {
+            saveRaw((Scriptable)args[0]);
+            return DocumentScriptable.this;
+        }
+    };
+    BuiltinFunc reloadFromContentFunc =new BuiltinFunc() {
+
+        @Override
+        public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                Object[] args) {
+            reloadFromContent();
+            return DocumentScriptable.this;
+        }
+    };
+
 	BuiltinFunc updateIndexFunc =new BuiltinFunc() {
 
 		@Override
 		public Object call(Context cx, Scriptable scope, Scriptable thisObj,
 				Object[] args) {
-			updateIndex();
+		    if (args.length==0) {
+	            updateIndex();
+		    } else if (args[1] instanceof Scriptable){
+		        updateIndex((Scriptable)args[1]);
+		    }
 			return DocumentScriptable.this;
 		}
 	};
@@ -215,17 +238,17 @@ public class DocumentScriptable implements Function {
 	public Object get(Object key) {
 	    //Log.d(this, "get - "+_id+"."+key);
         if ("id".equals(key)) return _id;
+        // Document Funcs (will be move into Document - 66646.2.2011.tonyu.jp)
         if ("save".equals(key)) return saveFunc;
-        if ("updateIndex".equals(key)) return updateIndexFunc;
-        //if ("compile".equals(key)) return compileFunc;
-        if ("identityHashCode".equals(key)) return System.identityHashCode(this);
-        if ("hasOwnProperty".equals(key)) return hasOwnPropFunc;
-        //if ("setBlob".equals(key)) return setBlobFunc;
-        //if ("getBlob".equals(key)) return getBlobFunc;
+        if (UPDATE_INDEX.equals(key) || ("_"+UPDATE_INDEX).equals(key)) return updateIndexFunc;
         if (SETCONTENTANDSAVE.equals(key)) return setContentAndSaveFunc;
         if (GETCONTENT.equals(key)) return getContentFunc;
+        // --- the followings need not be moved
         if (CALLSUPER.equals(key)) return callSuperFunc;
-        //if (RELOADFROMCONTENT.equals(key)) return reloadFromContentFunc;
+        if ("identityHashCode".equals(key)) return System.identityHashCode(this);
+        if ("hasOwnProperty".equals(key)) return hasOwnPropFunc;
+        if ("_reloadFromContent".equals(key)) return reloadFromContentFunc;
+        if ("_saveRaw".equals(key)) return saveRawFunc;
 	    DocumentRecord d=getDocument();
 		// deprecated
 		if (DocumentRecord.LASTUPDATE.equals(key)) return d.lastUpdate;
@@ -237,6 +260,7 @@ public class DocumentScriptable implements Function {
         if (("_"+DocumentRecord.OWNER).equals(key)) return d.owner;
         if ("_summary".equals(key)) return d.summary;
         if ("_version".equals(key)) return d.version;
+        if ("_content".equals(key)) return d.content;
         if (("_"+DocumentRecord.ATTR_CONSTRUCTOR).equals(key) || DocumentRecord.ATTR_CONSTRUCTOR.equals(key)) {
         	return getConstructor();
         }
@@ -266,6 +290,15 @@ public class DocumentScriptable implements Function {
 		}
         if ("_scopeRaw".equals(key)) {
             setScopeRaw(value+"");
+            return value;
+        }
+        if ("_summary".equals(key)) {
+            getDocument().summary=value+"";
+            return value;
+        }
+        if ("_content".equals(key)) {
+            getDocument().content=value+"";
+            //reloadFromContent();  (would be better comment out for import records..)
             return value;
         }
 
@@ -436,26 +469,46 @@ public class DocumentScriptable implements Function {
 		//this.__proto__= prototype;
 	}
 	public void save() {
-		refreshRecordAttrs();
-		refreshContent();
+		refreshRecordAttrsToRecord();
+		refreshContentToRecord();
 		Log.d(this, "save() content changed to "+getDocument().content);
-		//Thread.dumpStack();
 		PairSet<String,String> updatingIndex = indexUpdateMap();
 		loader.save(getDocument(), updatingIndex);
-		//loader.getDocumentSet().save(d,updatingIndex);// d.save();
 	}
-	private void refreshRecordAttrs() {
-		refreshSummary();
-		refreshScope();
-		refreshConstructor();
+	public void saveRaw(Scriptable updatingIndex) {
+        loader.save(getDocument(), convUpdIdx(updatingIndex));
 	}
-	private void refreshConstructor() {
+	private void updateIndex(Scriptable updatingIndex) {
+	    PairSet<String, String> updatingIndexp = convUpdIdx(updatingIndex);
+	    updateIndex(updatingIndexp);
+	}
+    private PairSet<String, String> convUpdIdx(Scriptable updatingIndex) {
+        // upd=[[k,v],[k,v]...]
+	    PairSet<String,String> updatingIndexp = new PairSet<String, String>();
+	    Object []idxs=Scriptables.toArray(updatingIndex);
+	    for (Object idx:idxs) {
+	        Object[] idxa=Scriptables.toArray(idx);
+	        if (idxa.length==2) {
+	            updatingIndexp.put(idxa[0]+"", idxa[1]+"");
+	        }
+	    }
+        return updatingIndexp;
+    }
+	private void updateIndex(PairSet<String,String> updatingIndex) {
+        loader.updateIndex(getDocument(), updatingIndex);
+	}
+	private void refreshRecordAttrsToRecord() {
+		refreshSummaryToRecord();
+		refreshScopeToRecord();
+		//refreshConstructor();
+	}
+	/*private void refreshConstructor() {
 		Scriptable con = getConstructor();
 		if (con instanceof Scriptable) {
 			setConstructor(con);
 		}
-	}
-	private void refreshScope() {
+	}*/
+	private void refreshScopeToRecord() {
 		final Map r=new HashMap();
 		Scriptable s=getScope();
 		if (s==null) {
@@ -485,7 +538,7 @@ public class DocumentScriptable implements Function {
 	private PairSet<String,String> indexUpdateMap() {
 		PairSet<String,String> updatingIndex=new PairSet<String,String>();
 		mkIndex(updatingIndex);
-		Log.d("updateIndex", "save() - index set to "+updatingIndex);
+		Log.d(UPDATE_INDEX, "save() - index set to "+updatingIndex);
 		return updatingIndex;
 	}
 	private void mkIndex(PairSet<String,String> idx) {
@@ -531,7 +584,7 @@ public class DocumentScriptable implements Function {
 			public void run(Object key, Object value) {
 				//Log.d("updateIndex", key+"="+value);
 				if (value instanceof DocumentScriptable) {
-					Log.d("updateIndex", s+"put "+key+"="+value);
+					Log.d(UPDATE_INDEX, s+"put "+key+"="+value);
 					DocumentScriptable d = (DocumentScriptable) value;
 					idx.put(IndexRecord.INDEX_REFERS, d.getDocument().id);
 				} else 	if (value instanceof Scriptable) {
@@ -541,7 +594,7 @@ public class DocumentScriptable implements Function {
 			}
 		});
 	}
-	private void refreshContent() {
+	private void refreshContentToRecord() {
 		final StringBuilder b=new StringBuilder();
 		b.append(HashLiteralConv.toHashLiteral(this));
 		getDocument().content=b+"";
@@ -554,7 +607,7 @@ public class DocumentScriptable implements Function {
 		if (c.length()>10000) c=c.substring(0,10000);
 		Log.d(System.identityHashCode(this), "setContentAndSave() content changed to "+c);
 		loader.loadFromContent(content, this);
-		refreshRecordAttrs();
+		refreshRecordAttrsToRecord();
 		PairSet<String,String> idx = indexUpdateMap();
 		loader.save(d, idx);
 		//loader.getDocumentSet().save(d, idx);//d.save();
@@ -565,7 +618,7 @@ public class DocumentScriptable implements Function {
 		if (d.content==null) return; //Log.die("Content of "+d.id+" is null!");
 		trace("Reading content - "+d.content);
 		loader.loadFromContent(d.content, this);
-		refreshRecordAttrs();
+		refreshRecordAttrsToRecord();
 	}
 	@Override
 	public String toString() {
@@ -574,7 +627,7 @@ public class DocumentScriptable implements Function {
 	public void clear() {
 		binds().clear();
 	}
-	public void refreshSummary() {
+	public void refreshSummaryToRecord() {
         DocumentRecord d=getDocument();
 		d.summary=genSummary();
 		Log.d(this, "Sumamry changed to "+d.summary);
@@ -681,6 +734,9 @@ public class DocumentScriptable implements Function {
     public void loadRecord(DocumentRecord d) {
         Log.d(this , "Loaded ! "+d);
         _d=d;
+    }
+    public void clearScope() {
+        scopeLoaded=false;
     }
 
 }

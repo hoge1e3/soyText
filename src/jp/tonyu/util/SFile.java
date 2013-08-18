@@ -50,6 +50,7 @@ public class SFile implements Iterable<SFile> {
 	}
 
 	public SFile(java.io.File f) {
+	    if (f==null) throw new RuntimeException("f is null!");
 		this.f = f;
 	}
 
@@ -67,7 +68,7 @@ public class SFile implements Iterable<SFile> {
 		}
 		if (parent() == null)
 			throw new RuntimeException(this + " is not in " + base);
-		return parent().relPath(base) + File.pathSeparator + name();
+		return parent().relPath(base) + File.separator + name();
 	}
 
 	@Override
@@ -158,11 +159,14 @@ public class SFile implements Iterable<SFile> {
 
 	@Override
 	public Iterator<SFile> iterator() {
-		final java.io.File[] files;
-		if (!exists() || !isDir()) files = new java.io.File[0];
-		else {
-			files = f.listFiles();
-		}
+	    final java.io.File[] files;
+	    if (!exists() || !isDir()) files = new java.io.File[0];
+	    else {
+	        final java.io.File[] files2 = f.listFiles();
+	        if (files2==null) files=new java.io.File[0];
+	        else files=files2;
+	    }
+
 
 		return new Iterator<SFile>() {
 			int i = 0;
@@ -204,9 +208,13 @@ public class SFile implements Iterable<SFile> {
 	}
 
 	public OutputStream outputStream() throws FileNotFoundException {
-		mkdirs(false);
-		return new FileOutputStream(f);
+	    return outputStream(false);
 	}
+    public OutputStream outputStream(boolean append) throws FileNotFoundException {
+        mkdirs(false);
+        return new FileOutputStream(f,append);
+    }
+
 
 	public String fullPath() {
 		try {
@@ -222,7 +230,9 @@ public class SFile implements Iterable<SFile> {
 	}
 
 	public String[] lines() throws IOException {
-		return text().split("[\\r\\n]+");
+		String text = text();
+		if (text==null) return new String[0];
+        return text.split("[\\r\\n]+");
 	}
 
 	// copy path/of/this from another/path/of/dst
@@ -277,7 +287,9 @@ public class SFile implements Iterable<SFile> {
 	}
 
 	public SFile parent() {
-		return new SFile(f.getParentFile());
+		File parentFile = f.getParentFile();
+		if (parentFile==null) return null;
+        return new SFile(parentFile);
 	}
 
 	public boolean moveTo(SFile dest) {
@@ -307,6 +319,10 @@ public class SFile implements Iterable<SFile> {
 
 	public static void copy(File src, File dest) throws IOException {
 		long l = src.lastModified();
+		dest.getParentFile().mkdirs();
+		if (!dest.getParentFile().exists()) {
+		    throw new IOException("Cannot create dir "+dest.getParentFile());
+		}
 		FileChannel srcChannel = new FileInputStream(src).getChannel();
 		FileChannel destChannel = new FileOutputStream(dest).getChannel();
 		try {
@@ -364,7 +380,7 @@ public class SFile implements Iterable<SFile> {
 			@Override
 			public Iterator<SFile> iterator() {
 				return new Iterator<SFile>() {
-					Iterator<SFile> dit = SFile.this.iterator();
+					Iterator<SFile> dit = SFile.this.orderByName().iterator();
 					SFile cur = null;
 					Iterator<SFile> curIt = null;
 					SFile nx = null;
@@ -415,12 +431,7 @@ public class SFile implements Iterable<SFile> {
 		};
 	}
 
-	// base.rel(unrel(base))==this
-	public String unrel(SFile base) {
-		String s = fullPath().substring(base.fullPath().length());
-		for (; s.startsWith(File.separatorChar + ""); s = s.substring(1))
-			;
-		return s;
-	}
+
+
 
 }

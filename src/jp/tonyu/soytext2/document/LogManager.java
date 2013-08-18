@@ -52,13 +52,19 @@ public class LogManager {
 	}
 
 	public synchronized void liftUpLastNumber(int n) throws SQLException, NotInWriteTransactionException {
-		if (n>lastNumber.serial) setLastNumber(n);
+		if (lastNumber==null || n>lastNumber.serial) setLastNumber(n);
 	}
 	public synchronized void setLastNumber(int n) throws SQLException, NotInWriteTransactionException {
 		/*lastNumber=n-1;
 		write("setLastNumber","");*/
-		lastNumber.serial=n;
-		sdb.idSerialTable().update(lastNumber);
+	    if (lastNumber==null) {
+	        lastNumber=new IdSerialRecord();
+	        lastNumber.serial=n;
+            sdb.idSerialTable().insert(lastNumber);
+	    } else {
+	        lastNumber.serial=n;
+	        sdb.idSerialTable().update(lastNumber);
+	    }
 	}
 
 	public synchronized int newSerial() throws SQLException, NotInWriteTransactionException {

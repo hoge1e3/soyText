@@ -72,6 +72,9 @@ public class ContentChecker implements IDocumentLoader, Wrappable {
 		for (String r: reqs) {
 			undefinedSymbols.add(r);
 		}
+		for (String p: preDefined) {
+		    undefinedSymbols.remove(p);
+		}
 		return undefinedSymbols;
 	}
 	public String[] reqs;
@@ -80,6 +83,7 @@ public class ContentChecker implements IDocumentLoader, Wrappable {
 	final private Map<String, String> newVars;
 	final private DocumentLoaderScriptable scope;
 	boolean syntaxCheckOnly=false;
+    private Set<String> preDefined=new HashSet<String>();
 	public ContentChecker(String content) {
 	    this(content, new HashMap<String,String>(),new String[0]);
 	    syntaxCheckOnly=true;
@@ -146,7 +150,13 @@ public class ContentChecker implements IDocumentLoader, Wrappable {
 	public String getMsg() {
 		if (errorOcurred) return errorMsg;
 		if (!objectInitialized) return "Object not inited(Perhaps $.extend did not called)";
-		if (!getUndefinedSymbols().isEmpty()) return "There are undefined symbols.";
+		if (!getUndefinedSymbols().isEmpty()) {
+		    StringBuilder buf=new StringBuilder();
+		    for (String s: getUndefinedSymbols()) {
+		        buf.append(s+" ");
+		    }
+		    return "There are undefined symbols:"+ buf;
+		}
 		if (isContentChanged()) return "Content is changed. Confirm again.";
 		return OK;
 	}
@@ -327,5 +337,8 @@ public class ContentChecker implements IDocumentLoader, Wrappable {
 	public Scriptable bless(Function klass, Scriptable fields) {
 		return inherit(klass,fields);
 	}
+    public void setPreDefined(Set<String> stringKeyMap) {
+        preDefined=stringKeyMap;
+    }
 
 }

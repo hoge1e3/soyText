@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Vector;
 import java.util.regex.Matcher;
 
 import javax.servlet.ServletOutputStream;
@@ -41,11 +42,14 @@ import jp.tonyu.debug.Log;
 import jp.tonyu.js.Args;
 import jp.tonyu.js.BuiltinFunc;
 import jp.tonyu.js.ContextRunnable;
+import jp.tonyu.js.Scriptables;
+import jp.tonyu.js.StringPropAction;
 import jp.tonyu.js.Wrappable;
 import jp.tonyu.soytext2.auth.UserPasswordCredential;
 import jp.tonyu.soytext2.browserjs.IndentAdaptor;
 import jp.tonyu.soytext2.document.DocumentRecord;
 import jp.tonyu.soytext2.document.DocumentSet;
+import jp.tonyu.soytext2.document.PairSet;
 import jp.tonyu.soytext2.document.SDB;
 import jp.tonyu.soytext2.file.ReadableBinData;
 import jp.tonyu.soytext2.file.ZipMaker;
@@ -106,7 +110,7 @@ public class HttpContext implements Wrappable {
 		return true;
 	}
 	void rebuildIndex() {
-		documentLoader.rebuildIndex();
+		documentLoader.rebuildIndex(-1, -1);
 	}
 	public final DocumentLoader documentLoader;
 	public DocumentSet documentSet() {
@@ -621,7 +625,7 @@ public class HttpContext implements Wrappable {
 			Log.d("htpcon", "execed = "+execed.get());
 		} else {
 			root=documentLoader.newDocument(documentLoader.rootDocumentId());
-			root.save();
+			root.saveRaw(null);
 		}
 		if (!execed.get()){
 			all();
@@ -869,7 +873,10 @@ public class HttpContext implements Wrappable {
 		if (req.getMethod().equals("POST")) {
 			content=params().get(DocumentRecord.ATTR_CONTENT);
 			String[] reqs = getRequires();
+			final Vector<String> reqs2=new Vector<String>();
+
 			ContentChecker c=new ContentChecker(content,addedVars(),reqs);
+			c.setPreDefined(Scriptables.toStringKeyMap(target.getScope()).keySet());
 			if (c.check()) {
 				documentProcessor(target).proc();
 				return;

@@ -66,7 +66,7 @@ run http://path.to.soytext/exec/109036@1.2010.tonyu.jp  (http://path.to.soytext/
         SDB s=ws.getDB(dbid);
         s.restoreFromNewestJSON();
         DocumentLoader d = new DocumentLoader(s);
-		d.rebuildIndex();
+		d.rebuildIndex(-1,-1);
 		ws.closeDB(dbid); // relase cache !
 
 /*

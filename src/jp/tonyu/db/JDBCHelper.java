@@ -415,7 +415,7 @@ public abstract class JDBCHelper {
                     JDBCRecord r = tables.get(key);
                     if (r==null) {
                         Log.d("db:restore", "Table "+key+" Not found ");
-                        return;
+                        continue;
                     }
                     JDBCTable<?> t = table(r.tableName());
                     if (!t.rec.getClass().equals(r.getClass())) {
@@ -430,6 +430,7 @@ public abstract class JDBCHelper {
                         r.copyFrom(m);
                         t.insert(r);
                     }
+                    Log.d(this, "Imported "+key+" "+value.size()+" records");
                 }
             }
         });

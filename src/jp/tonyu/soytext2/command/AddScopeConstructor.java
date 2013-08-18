@@ -28,6 +28,8 @@ public class AddScopeConstructor {
         try {
             SDB sold= new SDB( workspace , dbid, SDB.CUR_DB_VERSION);
             sold.close();
+            convert(workspace, dbid);
+
         } catch(NeedsUpgradeException e) {
             System.out.println(e.getMessage());
             backupOLD(workspace, dbid, e);

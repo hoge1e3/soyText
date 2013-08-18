@@ -346,10 +346,15 @@ public class DocumentProcessor {
 				}
 			}
 			if (keys.containsKey(DocumentRecord.ATTR_CONTENT)) {
-				d.setContentAndSave(keys.get(DocumentRecord.ATTR_CONTENT));
+
+			    String cont = keys.get(DocumentRecord.ATTR_CONTENT);
+			    d.getDocument().content=cont;
+			    // update index...
+			    d.saveRaw(null);
 			} else if (keys.containsKey(HttpContext.ATTR_BODY)) {
 				d.put(HttpContext.ATTR_BODY, keys.get(HttpContext.ATTR_BODY));
-				d.save();
+                // update index...
+				d.saveRaw(null);
 				//classicPost(d,keys);
 			}
 			res.setContentType("text/html; charset=utf8");

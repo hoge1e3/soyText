@@ -26,6 +26,9 @@ public class PairSet<K,V> implements Iterable<Pair<K,V>>{
 	public void put(final K key,final V value) {
 		h.add(Pair.create(key,value));
 	}
+    public void add(final K key,final V value) {
+        put(key,value);
+    }
 	@Override
 	public Iterator<Pair<K, V>> iterator() {
 		return h.iterator();
