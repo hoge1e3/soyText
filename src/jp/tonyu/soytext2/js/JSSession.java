@@ -47,6 +47,7 @@ public class JSSession {
     // public static final jp.tonyu.util.Context<JSSession> cur=new
     // jp.tonyu.util.Context<JSSession>();
     public final Scriptable root;
+    public static boolean optimize=true;
     private Scriptable initObject(Context cx) {
         ScriptableObject o=cx.initStandardObjects();
         /*
@@ -234,7 +235,7 @@ public class JSSession {
         }
         cx=Context.enter();
         try {
-            //cx.setOptimizationLevel(-1);
+            if (!optimize) cx.setOptimizationLevel(-1);
 
             cx.setClassShutter(new ClassShutter() {
                 Map<String, Boolean> cache=new HashMap<String, Boolean>();

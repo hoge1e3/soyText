@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -529,28 +530,44 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
             s.refreshIndex();
         }
     }
-    public void rebuildIndex(final int from, final int to) {
+    public Set<String> allIds() {
+        final Set<String> res=new HashSet<String>();
+        ltr.read(new LooseReadAction() {
+            @Override
+            public void run() throws NotInReadTransactionException {
+                documentSet.all(new DocumentAction() {
+                    @Override
+                    public boolean run(DocumentRecord d) throws NotInReadTransactionException {
+                        res.add(d.id);
+                        return false;
+                    }
+                });
+            }
+        });
+        return res;
+    }
+    public void rebuildIndex() {
+        Set<String> allIds = allIds();
+        rebuildIndex(allIds.iterator(),allIds.size() );
+    }
+    public void rebuildIndex(final Iterator<String> ids, final int count) {
         JSSession.withContext(new ContextRunnable() {
             @Override
             public Object run(Context cx) {
                 ltr.write(new LooseWriteAction() {
-                    int count=0;
                     @Override
                     public void run() throws NotInWriteTransactionException {
-                        documentSet.all(new UpdatingDocumentAction() {
-                            @Override
-                            public boolean run(DocumentRecord d) throws NotInWriteTransactionException {
-                                if (from>=0 && (count<from || count>to)) return false;
-                                count++;
-                                Log.d("rebuildIndex", d.id);// +" lastUpdate="+d.lastUpdate);
-                                DocumentScriptable s=byRecordOrCache(d);
-                                s.refreshIndex();
-                                return false;
-                            }
-                        });
+                        int c=count;
+                        while (c>0 && ids.hasNext()) {
+                            String id=ids.next();
+                            DocumentRecord d = documentSet.byId(id);
+                            Log.d("rebuildIndex", d.id);// +" lastUpdate="+d.lastUpdate);
+                            DocumentScriptable s=byRecordOrCache(d);
+                            s.refreshIndex();
+                            c--;
+                        }
                     }
                 });
-
                 return null;
             }
         });

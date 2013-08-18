@@ -110,7 +110,7 @@ public class HttpContext implements Wrappable {
 		return true;
 	}
 	void rebuildIndex() {
-		documentLoader.rebuildIndex(-1, -1);
+		documentLoader.rebuildIndex();
 	}
 	public final DocumentLoader documentLoader;
 	public DocumentSet documentSet() {

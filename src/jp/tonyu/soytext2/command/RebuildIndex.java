@@ -20,9 +20,15 @@ package jp.tonyu.soytext2.command;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Iterator;
+import java.util.Set;
 
+import jp.tonyu.db.NotInReadTransactionException;
+import jp.tonyu.soytext2.document.DocumentAction;
+import jp.tonyu.soytext2.document.DocumentRecord;
 import jp.tonyu.soytext2.document.SDB;
 import jp.tonyu.soytext2.js.DocumentLoader;
+import jp.tonyu.soytext2.js.JSSession;
 import jp.tonyu.soytext2.servlet.Workspace;
 import jp.tonyu.soytext2.servlet.FileWorkspace;
 import jp.tonyu.util.ArgsOptions;
@@ -34,15 +40,17 @@ public class RebuildIndex {
 		ArgsOptions opt=new ArgsOptions(args);
 		String dbid=(opt.args.length==0?workspace.getPrimaryDBID():opt.args[0]);
 
-		/*File f;
-		if (args.length>0) {
-			f=new File(args[0]);
-		} else {
-			f=SMain.getNewestPrimaryDBFile(new SFile("db"));
-		}*/
-		SDB s=workspace.getDB(dbid);// new SDB(f);
-		DocumentLoader d = new DocumentLoader(s);
-		d.rebuildIndex( opt.getInt("from", -1), opt.getInt("to", -1) );
-		s.close();
+        JSSession.optimize=false;
+        final SDB s=workspace.getDB(dbid);// new SDB(f);
+        final DocumentLoader d = new DocumentLoader(s);
+        Set<String> ids = d.allIds();
+		workspace.closeDB(dbid);
+		Iterator<String> it = ids.iterator();
+		while (it.hasNext()) {
+            final SDB s2=workspace.getDB(dbid);
+            final DocumentLoader d2 = new DocumentLoader(s2);
+            d2.rebuildIndex(it, 1000);
+            workspace.closeDB(dbid);
+		}
 	}
 }

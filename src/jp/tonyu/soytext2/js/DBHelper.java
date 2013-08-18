@@ -122,9 +122,9 @@ public class DBHelper implements Wrappable{
 	public String getContent(DocumentScriptable d) {
 		return d.getDocument().content;
 	}
-	/*public void setContentAndSave(DocumentScriptable d,String newContent) {
+	public void setContentAndSave(DocumentScriptable d,String newContent) {
 		d.setContentAndSave(newContent);
-	}*/
+	}
 	public String dbid() {
 		return loader.getDocumentSet().getDBID();
 	}
