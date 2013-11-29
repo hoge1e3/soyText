@@ -23,11 +23,19 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.ScriptableObject;
+
+
 import jp.tonyu.db.NotInReadTransactionException;
+import jp.tonyu.debug.Log;
+import jp.tonyu.js.ContextRunnable;
 import jp.tonyu.soytext2.document.DocumentAction;
 import jp.tonyu.soytext2.document.DocumentRecord;
 import jp.tonyu.soytext2.document.SDB;
 import jp.tonyu.soytext2.js.DocumentLoader;
+import jp.tonyu.soytext2.js.DocumentScriptable;
 import jp.tonyu.soytext2.js.JSSession;
 import jp.tonyu.soytext2.servlet.Workspace;
 import jp.tonyu.soytext2.servlet.FileWorkspace;
@@ -35,7 +43,9 @@ import jp.tonyu.util.ArgsOptions;
 import jp.tonyu.util.SFile;
 
 public class RebuildIndex {
-	public static void main(String[] args) throws Exception {
+	private static final String POSTREBUILDINDEX = "postRebuildIndex";
+
+    public static void main(String[] args) throws Exception {
 		FileWorkspace workspace=new FileWorkspace(new SFile("."));
 		ArgsOptions opt=new ArgsOptions(args);
 		String dbid=(opt.args.length==0?workspace.getPrimaryDBID():opt.args[0]);
@@ -43,6 +53,17 @@ public class RebuildIndex {
         JSSession.optimize=false;
         final SDB s=workspace.getDB(dbid);// new SDB(f);
         final DocumentLoader d = new DocumentLoader(s);
+        d.rebuildIndex();
+
+        DocumentScriptable root = d.rootDocument();
+        Object pri=ScriptableObject.getProperty(root, POSTREBUILDINDEX);
+        Log.d("IDX","post rebuild index - "+pri);
+        if (pri instanceof Function) {
+            Function f = (Function) pri;
+            d.jsSession().call(f, new Object[0]);
+        }
+        workspace.closeDB(dbid);
+        /*
         Set<String> ids = d.allIds();
 		workspace.closeDB(dbid);
 		Iterator<String> it = ids.iterator();
@@ -51,6 +72,6 @@ public class RebuildIndex {
             final DocumentLoader d2 = new DocumentLoader(s2);
             d2.rebuildIndex(it, 1000);
             workspace.closeDB(dbid);
-		}
+		}*/
 	}
 }

@@ -18,6 +18,7 @@
 
 package jp.tonyu.soytext2.js;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -169,6 +170,10 @@ public class DBHelper implements Wrappable{
     public HashBlob writeHashBlob(InputStream i) throws IOException {
         return loader.writeHashBlob(i);
     }
+    public HashBlob writeHashBlob(String s) throws IOException {
+        return loader.writeHashBlob(new ByteArrayInputStream(s.getBytes()));
+    }
+
     public Object transactionStatus() {
         TransactionMode mode=loader.ltr.thisThreadMode();
         if (mode==null) return mode;
@@ -189,7 +194,11 @@ public class DBHelper implements Wrappable{
         			@Override
         			public boolean run(IndexRecord id) throws NotInReadTransactionException {
         				DocumentScriptable doc=loader.byId(id.document);
-        				loader.jsSession().call(iter, new Object[]{doc, id.name, id.value} );
+        				Object brk=loader.jsSession().call(iter, new Object[]{doc, id.name, id.value} );
+        				if (brk instanceof Boolean) {
+                            Boolean b = (Boolean) brk;
+                            return b;
+                        }
         				return false;
         			}
         		});

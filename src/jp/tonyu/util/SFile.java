@@ -85,12 +85,32 @@ public class SFile implements Iterable<SFile> {
 		return f.hashCode();
 	}
 
+    public final static String ENC_AUTO="ENC_AUTO";
 	public String text() throws IOException {
 		return textEnc("utf-8");
 	}
+    public String text_chkEnc(String enc) throws IOException {
+        byte[] bytes=bytes();
+        String res=new String(bytes,enc);
+        byte[] r=res.getBytes(enc);
+        if (r.length!=bytes.length) return null;
+        for (int i=0 ; i<r.length ; i++) {
+            if (bytes[i]!=r[i]) return null;
+        }
+        return res;
+    }
 
-	public String textEnc(String enc) throws IOException {
-		if (!exists()) return null;
+    static final String[] encs=new String[]{"utf-8","MS932","EUC_JP","ISO2022JP"};
+    public String textEnc(String enc) throws IOException {
+        if (!exists()) return null;
+        if (ENC_AUTO.equals(enc)) {
+            for (String e:encs) {
+                //System.out.println("Try .. "+e);
+                String res=text_chkEnc(e);
+                if (res!=null) return res;
+            }
+            return null;
+        }
 		BufferedReader rd = new BufferedReader(new InputStreamReader(
 				new FileInputStream(f), enc));// FileReader(f));
 		StringBuffer buf = new StringBuffer();

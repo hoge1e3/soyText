@@ -53,31 +53,32 @@ import org.mozilla.javascript.UniqueTag;
 import org.omg.CosNaming.NamingContextPackage.NotFound;
 
 public class DocumentScriptable implements Function {
-	private static final String UPDATE_INDEX = "updateIndex";
+    public static final String IS_INSTANCE_ON_MEMORY = "isInstanceOnMemory";
+    public static final String CALLSUPER="callSuper";
+    public static final String ONAPPLY="onApply",APPLY="apply",CALL="call";
+    public static final String ONUPDATEINDEX = "onUpdateIndex";
+
+    private static final String UPDATE_INDEX = "updateIndex";
+    private static final String DOLLAR="$";
+    private static final Object SETCONTENTANDSAVE = "setContentAndSave";
+    private static final Object GETCONTENT = "getContent";
+    private static final String ON_GENERATE_CONTENT = "onGenerateContent";
+
+    DocumentRecord _d;
+    final String _id;
+    public final DocumentLoader loader;
+    Map<Object, Object>_binds=new HashMap<Object, Object>();
+
+    Scriptable scope=null;
+    boolean scopeLoaded=false;
     public static boolean lazyLoad=true;
 	boolean contentLoaded=!lazyLoad; // true iff loaded or loading
-	private synchronized void loadContent() {
+
+    private synchronized void loadContent() {
 		if (contentLoaded) return;
 		contentLoaded=true;
 		reloadFromContent();
 	}
-	public static final String IS_INSTANCE_ON_MEMORY = "isInstanceOnMemory";
-	public static final String CALLSUPER="callSuper";
-
-	//private static final Object GETTERKEY = "[[110414_051952@"+Origin.uid+"]]";
-	//Scriptable __proto__;
-	Map<Object, Object>_binds=new HashMap<Object, Object>();
-	DocumentRecord _d;
-	final String _id;
-	public final DocumentLoader loader;
-	public static final String ONAPPLY="onApply",APPLY="apply",CALL="call";
-	private static final Object SETCONTENTANDSAVE = "setContentAndSave";
-	private static final Object GETCONTENT = "getContent";
-    private static final String DOLLAR="$";
-	public static final String ONUPDATEINDEX = "onUpdateIndex";
-	static int cnt=0;
-	Scriptable scope=null;
-	boolean scopeLoaded=false;
 	public synchronized Scriptable getScope() {
 		if (scopeLoaded) return scope;
         scopeLoaded=true;
@@ -112,9 +113,6 @@ public class DocumentScriptable implements Function {
 
 	public DocumentRecord getDocument() {
 	    if (_d!=null) return _d;
-	    cnt++;
-	    //if (cnt>200) Log.die("Get much! "+_id);
-        //Log.d(this , "Get! "+_id);
 	    _d=loader.recordById(_id);
 	    if (_d==null) Log.die("Document "+_id+" is not exist");
 	    return _d;
@@ -123,15 +121,9 @@ public class DocumentScriptable implements Function {
 		loadContent();
 		return _binds;
 	}
-	//static Map<String, DocumentScriptable> debugH=new HashMap<String, DocumentScriptable>();
 	public DocumentScriptable(final DocumentLoader loader,String id) {
 		this.loader=loader;
 		_id=id;
-		//this.d=d;
-
-		/*put("id",this , d.id );
-		put("lastUpdate",this, d.lastUpdate);
-		put("save",this, );*/
 	}
 	public DocumentScriptable(final DocumentLoader loader, DocumentRecord rec) {
 	    this.loader=loader;
@@ -249,16 +241,12 @@ public class DocumentScriptable implements Function {
         if ("hasOwnProperty".equals(key)) return hasOwnPropFunc;
         if ("_reloadFromContent".equals(key)) return reloadFromContentFunc;
         if ("_saveRaw".equals(key)) return saveRawFunc;
+
 	    DocumentRecord d=getDocument();
-		// deprecated
-		if (DocumentRecord.LASTUPDATE.equals(key)) return d.lastUpdate;
-		if (DocumentRecord.OWNER.equals(key)) return d.owner;
-		if ("summary".equals(key)) return d.summary;
-        // end of deprecated. use followings instead.
         if ("_id".equals(key)) return d.id;
-        if (("_"+DocumentRecord.LASTUPDATE).equals(key)) return d.lastUpdate;
-        if (("_"+DocumentRecord.OWNER).equals(key)) return d.owner;
-        if ("_summary".equals(key)) return d.summary;
+        if (DocumentRecord.LASTUPDATE.equals(key)||("_"+DocumentRecord.LASTUPDATE).equals(key)) return d.lastUpdate;
+        if (DocumentRecord.OWNER.equals(key)||("_"+DocumentRecord.OWNER).equals(key)) return d.owner;
+        if ("summary".equals(key)||"_summary".equals(key)) return d.summary;
         if ("_version".equals(key)) return d.version;
         if ("_content".equals(key)) return d.content;
         if (("_"+DocumentRecord.ATTR_CONSTRUCTOR).equals(key) || DocumentRecord.ATTR_CONSTRUCTOR.equals(key)) {
@@ -270,9 +258,6 @@ public class DocumentScriptable implements Function {
         if ("_scopeRaw".equals(key)) {
             return getDocument().scope;
         }
-        // end of use followings instead.
-
-
 		Object res = binds().get(key);
 		if (res!=null) return res;
 
@@ -301,12 +286,6 @@ public class DocumentScriptable implements Function {
             //reloadFromContent();  (would be better comment out for import records..)
             return value;
         }
-
-
-		/*if (key instanceof DocumentScriptable) {
-			DocumentScriptable s = (DocumentScriptable) key;
-			binds.put(JSSession.idref(s, d.documentSet),value);
-		} else*/
 		if (key instanceof String || key instanceof Number) {
 			binds().put(key, value);
 		} else if (value==null){
@@ -596,7 +575,15 @@ public class DocumentScriptable implements Function {
 	}
 	private void refreshContentToRecord() {
 		final StringBuilder b=new StringBuilder();
-		b.append(HashLiteralConv.toHashLiteral(this));
+		Object gen=ScriptableObject.getProperty( this, ON_GENERATE_CONTENT);
+		if (gen instanceof Function) {
+            Function func = (Function) gen;
+            b.append(
+                    loader.jsSession().call(func, this, new Object[]{this} )
+                    );
+        } else {
+            b.append(HashLiteralConv.toHashLiteral(this));
+        }
 		getDocument().content=b+"";
 	}
 	public void setContentAndSave(String content) {

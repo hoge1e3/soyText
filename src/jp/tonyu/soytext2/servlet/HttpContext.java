@@ -74,31 +74,14 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 public class HttpContext implements Wrappable {
-	public static final String CONTENT_TYPE = "Content-Type";
-	private static final String DATA = "data";
-	//private static final String SYNCID = "syncid";
-	private static final String DOWNLOADSINCE = "downloadsince";
+    public static final String CONTENT_TYPE = "Content-Type";
 	private static final String DO_EDIT = "doEdit";
 	public static final String TEXT_PLAIN_CHARSET_UTF_8 = "text/plain; charset=utf-8";
 	private static final String TEXT_HTML_CHARSET_UTF_8 = "text/html; charset=utf-8";
 	private static final String SEL = "sel_";
 	public static final jp.tonyu.util.Context<HttpContext> cur=new jp.tonyu.util.Context<HttpContext>();
-	private static final String SESSION_NAME = "soyText_Session";
 	public static final String ATTR_BODY = "body";
-
-
 	public boolean isRoot() {
-		/*String addr=req.getRemoteAddr();
-		Log.d("RMT", addr);
-		String host=req.getRemoteHost();
-		Log.d("RMTH", host);
-
-		if ("localhost".equals(addr) || "127.0.0.1".equals(addr) || "0:0:0:0:0:0:0:1".equals(addr)) {
-			return true;
-		}*/
-		//if (addr !=null && addr.length()>0 && addr.indexOf(".")<0) return true; // like my_computer
-		/*String user = user();
-		if (Auth.cur.get().isRootUser(user)) return true;*/
 		return Auth.cur.get().isRootUser();
 	}
 	public String user() {
@@ -122,12 +105,12 @@ public class HttpContext implements Wrappable {
 		this.res = res;
 		this.documentLoader=loader;
 	}
-	int printc=0;
+	int printc=0; // printc is used in D-rails
 	public void print(Object str) throws IOException {
 		res.getWriter().print(str);
 		printc++;
 	}
-	public int getPrintCount(){return printc;}
+    public int getPrintCount(){return printc;}
 
 	private HttpServletRequest req;
 	public HttpServletRequest getReq() {
@@ -137,17 +120,9 @@ public class HttpContext implements Wrappable {
 		return res;
 	}
 	private HttpServletResponse res;
-
-
-
 	static final String OP_="OP_";
-	//public static final String headAttr="_head";
-
 	public static final String AJAXTAG = "AJAXTAG:";
 	public static final String ATTR_ARGUMENTORDER="argumentOrder";
-
-
-
 	Map<String,String> _params=null;
 	static final String ATTR_FORMAT = "_format";
 	private static final String DOGET = "doGet";
@@ -176,7 +151,6 @@ public class HttpContext implements Wrappable {
     }
 	public String[] argsIncludingRom() {
     	String str=req.getPathInfo();
-    	//str=str.replaceAll("^/"+nativePrefix, "");
         String[] s=str.split("/");
         return s;
     }
@@ -205,7 +179,6 @@ public class HttpContext implements Wrappable {
 					proc2();
 					Log.d("htpcon","After proc2");
 				}catch (Exception e) {
-					//ee.set(e);
 					try {
 						Log.d("htpcon", "spawned Error - "+e);
 						res.setContentType(TEXT_PLAIN_CHARSET_UTF_8);
@@ -230,10 +203,6 @@ public class HttpContext implements Wrappable {
 		}
     }
     public void procRom() throws IOException {
-    	/*if (!isRoot()) {
-    		auth();
-    		return;
-    	}*/
 		String[] s=args();
         String cmd=null;
         if (s.length>=2) cmd=s[1];
@@ -241,17 +210,12 @@ public class HttpContext implements Wrappable {
         Log.d(this,"qstr = "+req.getQueryString());
         DocumentScriptable root=documentLoader.rootDocument();
         if (!isRoot()) {
-            Object permitted=(root!=null ? ScriptableObject.getProperty(root, "permittedROMCommands") : null);
+            Object permitted=(root!=null ?
+                    ScriptableObject.getProperty(root, DocumentLoader.PERMITTED_ROM_COMMANDS) : null);
             boolean p=false;
             if (cmd!=null && permitted instanceof Scriptable) {
                 Scriptable perm=(Scriptable) permitted;
-                //Log.d(this, "Perm cmd = "+cmd);
                 p=ScriptableObject.hasProperty(perm, cmd);
-                /*for (Object name: perm.getIds() ) {
-                Log.d(this, "Perm cmd name = "+name+ "   has="+ScriptableObject.hasProperty(perm, name.toString())+ " cmd = "+cmd+
-                        ScriptableObject.hasProperty(perm, cmd) );
-                }*/
-
             }
             if (!p) {
                 auth();
@@ -286,33 +250,12 @@ public class HttpContext implements Wrappable {
         else if (s.length==2 && s[1].equalsIgnoreCase("rebuildindex")) {
         	rebuildIndex();
         }
-        /*else if (s.length>=2 && s[1].equalsIgnoreCase("upload")) {
-        	upload();
-        }*/
-        else if (s.length>=2 && s[1].equalsIgnoreCase("fileupload")) {
-        	fileUpload();
-        }
-        else if (s.length>=2 && s[1].equalsIgnoreCase("fileuploaddone")) {
-        	fileUploadDone();
-        }
-        /*else if (s.length>=2 && s[1].equalsIgnoreCase("download")) {
-        	download();
-        }*/
         else if (s.length>=2 && s[1].equalsIgnoreCase("search")) {
         	search();
         }
-        /*else if (s.length>=2 && s[1].equalsIgnoreCase("sendsync")) {
-        	sendSync();
-        }*/
-        /*else if (s.length>=2 && s[1].equalsIgnoreCase("recvsync")) {
-        	recvSync();
-        }*/
         else if (s.length>=2 && s[1].equalsIgnoreCase("browserjs")) {
         	browserjs();
         }
-        /*else if (s.length>=2 && s[1].equals("import1")) {
-        	importFromVer1();
-        }*/
         else if (s.length>=2 && s[1].equalsIgnoreCase("errorlog")) {
         	errorLog();
         }
@@ -326,9 +269,6 @@ public class HttpContext implements Wrappable {
         else {
             notfound(s[1]);
         }
-        /*else {
-        	byName();
-        }*/
     }
     private void errorLog() throws IOException {
     	res.setContentType(TEXT_PLAIN_CHARSET_UTF_8);
@@ -356,260 +296,8 @@ public class HttpContext implements Wrappable {
 			notfound("Class "+a[2]+" Not found.");
 		}
 	}
-	private void fileUpload() {
-    	//new FileUpload().uploadForm(this);
-	}
-    private void fileUploadDone() {
-    	//new FileUpload().uploadDone(this);
-	}
-	private DocumentScriptable getSyncProf(String name) {
-		String syncProfId=params().get(name);
-    	DocumentScriptable syncProf=documentLoader.byIdOrNull(syncProfId);
-		return syncProf;
-	}
 	static final String LOCAL_LAST_SYNCED= "localLastSynced";
 	static final String REMOTE_LAST_SYNCED= "remoteLastSynced";
-	private static final String LOCAL_SYNCID = "localsyncid";
-	private static final String REMOTE_SYNCID = "remotesyncid";
-	private static final Object SETLASTUPDATE = "SetLastUpdate";
-	private long getLongProp(Scriptable s, String name) {
-		Object o=ScriptableObject.getProperty(s,name);
-		if (o instanceof Number) {
-			Number l = (Number) o;
-			return l.longValue();
-		}
-		return -1;
-	}
-    /* input param:
-     *   localsyncid=(this system's sync profile id)
-     *   credential=
-     *   data= [DocumentRecord] ...
-     *   downloadsince= (optional)
-     * output:
-     *   [DocumentRecord]...   (since this.syncProf.localLastSynced)
-     *   [SetLastUpdate]
-     *   generated log id(after saved all inputs!)
-     * changes:
-     *   this.syncProf.localLastSynced    -> generated log id
-     *   this.syncProf.remoteLastSynced   -> max (input DocumentRecord.lastUpdate)
-    */
-    /*private void recvSync() throws IOException {
-    	DocumentScriptable localSyncProf = getSyncProf(LOCAL_SYNCID);
-
-    	// download
-    	Object sinceo=ScriptableObject.getProperty(localSyncProf, LOCAL_LAST_SYNCED);
-		String sinces=params().get(DOWNLOADSINCE);
-		final long since;
-		if (sinces!=null) {
-			since=Long.parseLong(sinces);
-		} else if (sinceo instanceof Number) {
-			Number n = (Number) sinceo;
-			since=n.longValue();
-		} else {
-			since=-1;
-		}
-    	res.setContentType (TEXT_PLAIN_CHARSET_UTF_8);
-    	final PrintWriter writer=res.getWriter();
-    	exportDocuments(since, writer,null);
-    	// upload
-        String data=params().get(DATA);
-		StringReader rd=new StringReader(data);
-		Scanner sc=new Scanner(rd);
-		long newRemoteLastSynced=importDocuments(sc,null,null);
-
-		// update local last synced
-		long newLocalLastSynced=documentLoader.getDocumentSet().log(
-				new Date()+"", "sync", params().get(LOCAL_SYNCID), "");
-		ScriptableObject.putProperty(localSyncProf,LOCAL_LAST_SYNCED,newLocalLastSynced);
-		ScriptableObject.putProperty(localSyncProf,REMOTE_LAST_SYNCED,newRemoteLastSynced);
-        writer.println("["+SETLASTUPDATE+"]");
-        writer.println(newLocalLastSynced);
-
-		localSyncProf.save();
-
-    }*/
-
-    /* input param:
-     *   remotesyncid=(remote's sync profile id)
-     *   localsyncid=(this system's sync profile id)
-     * Connect to this.syncProf.url with:
-     *   data= [DocumentRecord] ...  (since this.syncProf.localLastSynced)
-     *   localsync=remotesyncid
-     *   downloadsince = (this.syncProf.remoteLastSynced)
-     * Receives
-     *   [DocumentRecord]...
-     *   [SetLastUpdate]
-     *   remote's generated log id
-     * changes:
-     *   this.syncProf.localLastSynced  -> generated log id
-     *   this.syncProf.remoteLastSynced -> max (received DocumentRecord.lastUpdate)
-     */
-    /*private void sendSync() throws IOException {
-		res.setContentType(TEXT_HTML_CHARSET_UTF_8);
-		PrintWriter w=res.getWriter();
-
-		DocumentScriptable localSyncProf = getSyncProf(LOCAL_SYNCID);
-		w.println("LocalSyncProfile = "+localSyncProf+"<BR>");
-
-
-    	String urls=""+ScriptableObject.getProperty(localSyncProf, "url");
-    	StringWriter data=new StringWriter();
-    	PrintWriter pdata=new PrintWriter(data);
-    	long uploadsince=getLongProp(localSyncProf, LOCAL_LAST_SYNCED);
-    	Vector<String> exported=new Vector<String>(), imported=new Vector<String>();
-    	exportDocuments(uploadsince, pdata,exported);
-    	String remoteSyncid=params().get(REMOTE_SYNCID);
-
-		w.println("RemoteSyncProfile = "+remoteSyncid+"<BR>");
-    	long downloadsince=getLongProp(localSyncProf, REMOTE_LAST_SYNCED);
-
-		w.println("uploadsince= "+uploadsince+"<BR>");
-		w.println("downlocalsince= "+downloadsince+"<BR>");
-
-
-    	String recv=HttpPost.send(urls, Maps.create(DATA, data.getBuffer()+"")
-    			.p(LOCAL_SYNCID,remoteSyncid).p(DOWNLOADSINCE,""+downloadsince));
-    	Scanner sc=new Scanner(new StringReader(recv));
-
-    	Set<String> excludes=new HashSet<String>();
-    	excludes.addAll(exported);
-		long newRemoteLastSynced=importDocuments(sc,imported,excludes);
-
-		// update local last synced
-		long newLocalLastSynced=documentLoader.getDocumentSet().log
-				(new Date()+"", "sync", params().get(LOCAL_SYNCID), "");
-		ScriptableObject.putProperty(localSyncProf,LOCAL_LAST_SYNCED,newLocalLastSynced);
-		ScriptableObject.putProperty(localSyncProf,REMOTE_LAST_SYNCED,newRemoteLastSynced);
-		localSyncProf.save();
-
-		w.println("<HR>Exported : <BR>");
-		for (String s:exported) {
-			w.println(s+" ");
-		}
-		w.println("<HR>Imported : <BR>");
-		for (String s:imported) {
-			w.println(s+" ");
-		}
-		w.println("<HR>Excluded : <BR>");
-		for (String s:excludes) {
-			w.println(s+" ");
-		}
-
-		w.println("<HR>new LocalLastSynced = "+newLocalLastSynced+"<BR>");
-		w.println("new RemoteLastSynced = "+newRemoteLastSynced+"<BR>");
-
-    	String after = params().get("after");
-    	if (after!=null && after.length()>0) {
-    		w.println(Html.p("<HR><a href=%a>戻る</a>",rootPath()+after));
-    	}
-
-    }*/
-	/*private void download() throws IOException {
-		//input param:
-		//  dbid=(client's DBID)
-		//  credential=(client's user name or something)
-		//  since=(= client's remoteLastsync) displays DocumentRecord.lastupdate>since
-		//output:
-		//  [DocumentRecord]
-		//  [DocumentRecord]
-		//  :
-		//note: client's localLastsync set to client's new log id
-		//note: client's remoteLastsync set to max(DocumentRecord.lastUpdate)
-
-		final StringBuffer buf = new StringBuffer();
-		String sinces=params().get("since");
-		final long since;
-		if (sinces!=null) {
-			since=Long.parseLong(sinces);
-		} else {
-			since=-1;
-		}
-    	res.setContentType (TEXT_PLAIN_CHARSET_UTF_8);
-    	final PrintWriter writer=res.getWriter();
-        exportDocuments(since, writer, null);
-
-	}*/
-	/*
-	private void exportDocuments(final long since, final PrintWriter writer,
-			final List<String> exportedIds) {
-		documentLoader.search("", null, new BuiltinFunc() {
-			@Override
-			public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-					Object[] args) {
-				DocumentScriptable s=(DocumentScriptable)args[0];
-				DocumentRecord document = s.getDocument();
-				Log.d("CompLastup", document.lastUpdate+" - "+since);
-				if (document.lastUpdate>since) {
-					document.export(writer);
-					if (exportedIds!=null) exportedIds.add(document.id);
-					return false;
-				} else return true;
-			}
-		});
-	}*/
-	/*private void upload() throws IOException {
-		//input params:
-		//  syncid=(this server's syncProfile id)
-		//  credential=(client's user name or something)
-		//  data=
-		//    [DocumentRecord]
-		//    [DocumentRecord]
-		//    :
-		//    (contain since client's localLastSynced)
-		//output:
-		//  none
-		//note: This system's remoteLastsync set to max(DocumentRecord.lastupdate)
-		//note: This system's localLastsync set to client's new log id
-
-		if ("get".equalsIgnoreCase( req.getMethod())){
-			print(Html.p("<html><body>" +
-					"<form action=%a method=POST>"+
-					"syncid=<input name=syncid><BR>"+
-					"credential=<input name=credential><BR>"+
-					"data:<BR><textarea name=data rows=40 cols=80></textarea><BR>"+
-					"<input type=submit>"+
-					"</form>" +
-					"</body></html>",
-					romRootPath()+"/upload"));
-		} else {
-			String data=params().get(DATA);
-			StringReader rd=new StringReader(data);
-			Scanner sc=new Scanner(rd);
-			importDocuments(sc,null,null);
-		}
-	}*/
-	/*public boolean isOfflineMode() {
-		return JarDownloader.jarFile.get().length()==0;
-	}*/
-	/*private long importDocuments(Scanner sc, List<String> importedIds, Set<String> excludes) {
-		long newRemoteLastSynced=0;
-		try {
-			List<DocumentRecord> loaded=new Vector<DocumentRecord>();
-			String nextCl=null;
-			while (true) {
-				DocumentRecord d = new DocumentRecord();
-				nextCl=d.importRecord(sc);
-				Log.d("IMPORT", d.id);
-				Log.d("IMPORT2", d.id);
-				if (d.content!=null) {
-					if (d.lastUpdate>newRemoteLastSynced) newRemoteLastSynced=d.lastUpdate;
-					if (excludes==null || !excludes.contains(d.id)) {
-						if (importedIds!=null) importedIds.add(d.id);
-						loaded.add(0,d);
-						Log.d("LOADED", d.id);
-					}
-				}
-				if (!d.tableName().equals(nextCl) ) break;
-			}
-			documentLoader.importDocuments(loaded);
-			if (SETLASTUPDATE.equals(nextCl)) {
-				newRemoteLastSynced=sc.nextLong();
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return newRemoteLastSynced;
-	}*/
 	private void topPage() throws IOException {
 		Log.d("htpcon", "home");
 		final Ref<Boolean> execed = Ref.create(false);
@@ -625,7 +313,7 @@ public class HttpContext implements Wrappable {
 			Log.d("htpcon", "execed = "+execed.get());
 		} else {
 			root=documentLoader.newDocument(documentLoader.rootDocumentId());
-			root.saveRaw(null);
+			root.save();
 		}
 		if (!execed.get()){
 			all();
@@ -677,17 +365,6 @@ public class HttpContext implements Wrappable {
 
 				@Override
 				public Object run(Context cx) {
-					//String sf = cx.decompileFunction(f,0);
-					//Log.d("htpcon","Before exec func "+ sf );
-					/*if (sf.indexOf("HttpHelper")>=0) {
-						Log.die("Who did it?"); //ListLessons did it
-					}*/
-					/*try {
-						print("Before exec");
-					} catch (IOException e) {
-						// TODO 自動生成された catch ブロック
-						e.printStackTrace();
-					}*/
 					if (Args.getArgs(f).length>1) {
 						f.call(cx, jssession().root, thiz,
 							new Object[]{getReq(),getRes(),HttpContext.this});
@@ -695,13 +372,6 @@ public class HttpContext implements Wrappable {
 						f.call(cx, jssession().root, thiz,
 								new Object[]{HttpContext.this});
 					}
-					//Log.d("htpcon","After exec func"+ sf);
-					/*try {
-						print("After exec");
-					} catch (IOException e) {
-						// TODO 自動生成された catch ブロック
-						e.printStackTrace();
-					}*/
 					return null;
 				}
 			});
@@ -714,47 +384,8 @@ public class HttpContext implements Wrappable {
 		Log.d("htpctx_jsses",jsSession);
 		return jsSession;
 	}
-
-	/*private void byName() throws IOException {
-		String name=req.getPathInfo().replaceAll("^/", "").replaceAll("/.*", "");
-		Query q=QueryBuilder.create("name:?").tmpl("name", name, AttrOperator.exact).toQuery();
-		final Ref<Boolean> found=Ref.create(false);
-		documentLoader.searchByQuery(q, new BuiltinFunc() {
-			@Override
-			public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-					Object[] args) {
-				DocumentScriptable s=(DocumentScriptable)args[0];
-				try {
-					if (!exec(s)) {
-						documentProcessor(s).proc();
-					}
-					found.set(true);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				return true;
-			}
-		});
-		if (!found.get()) {
-			notfound(name);
-		}
-
-	}*/
 	private String contentStatus(ContentChecker c) {
 		StringBuilder msg=new StringBuilder(c.getMsg()+"<br/>\n");
-
-
-		/*for (String name:c.getUndefinedSymbols()) {
-			String sel = SEL+name;
-			String searchAddr = Html.p(romRootPath()+"/search?sel=%u&q=%u",sel, "name:"+name);
-			msg.append(Html.p("<a href=%a target=%a>%t</a> <input id=%a name=%a/> <br/>\n",
-					 searchAddr,
-					 "frame_"+name,
-					 name,
-					 sel,
-					 sel
-			));
-		}*/
 		return msg+"";
 	}
 	private String romRootPath() {
@@ -821,7 +452,6 @@ public class HttpContext implements Wrappable {
 		//   $soyText/customedit/00000
 		//   $soyText/customedit/00000?defaultEditor=id
 		String id=s[2];
-		String msg="";
 		target = documentLoader.byIdOrNull(id);
 		if (target==null) {
 		    notfound(id);
@@ -843,16 +473,11 @@ public class HttpContext implements Wrappable {
 						f.call(cx, jssession().root, target,
 								new Object[]{HttpContext.this});
 					}
-					/*
-					f.call(cx, jssession().root, target,
-							new Object[]{getReq(),getRes(),HttpContext.this});
-					*/
 					return null;
 				}
 			});
 			execed=true;
 		} else if (defEdit!=null){
-			//DocumentScriptable defEditDoc = documentLoader.byId(defEdit);
 			redirect(romRootPath()+"/exec/"+defEdit+"?doc="+target);
 		} else {
 			edit();
@@ -873,8 +498,6 @@ public class HttpContext implements Wrappable {
 		if (req.getMethod().equals("POST")) {
 			content=params().get(DocumentRecord.ATTR_CONTENT);
 			String[] reqs = getRequires();
-			final Vector<String> reqs2=new Vector<String>();
-
 			ContentChecker c=new ContentChecker(content,addedVars(),reqs);
 			c.setPreDefined(Scriptables.toStringKeyMap(target.getScope()).keySet());
 			if (c.check()) {
@@ -938,13 +561,6 @@ public class HttpContext implements Wrappable {
 			);
 		}
 	}
-	/*public void su(String user) {
-		boolean assertRoot = assertRoot();
-		Log.d(this, "Session_assert = "+assertRoot);
-		if (assertRoot) return;
-		req.getSession().setAttribute(USERNAME, user);
-
-	}*/
     private void auth() throws IOException {
 		String user=params().get("user");
 		String pass=params().get("pass");
@@ -965,25 +581,6 @@ public class HttpContext implements Wrappable {
 			} else {
 				msg="Login incorrect";
 			}
-			/*if ("logout".equals(user)) {
-				user="";
-				//s=Session.NOBODY;
-				req.getSession().removeAttribute(USERNAME);
-			}  else {
-				Authenticator a=documentLoader.authenticator();
-				if (a!=null && a.check(user, pass)) {
-					prompt=false;
-					req.getSession().setAttribute(USERNAME, user);
-		    		String after=params().get("after");
-		    		if (after!=null) {
-		    			res.sendRedirect(rootPath()+"/"+after);
-		    		} else {
-		    			res.sendRedirect(rootPath()+"/");
-		    		}
-				} else {
-					msg="ユーザ名、パスワードが間違っています。";
-				}
-			}*/
     	}
 		if (prompt) {
     		if (user==null) user="";
@@ -1210,10 +807,6 @@ public class HttpContext implements Wrappable {
 	        {
 	            def = "image/jpeg";
 	        }
-	        /*if (fileName.endsWith(".jar"))
-	        {
-	            def = "application/x-java-applet";
-	        }*/
 	    }
 	    return def;
 	}

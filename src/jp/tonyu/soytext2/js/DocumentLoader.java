@@ -63,6 +63,7 @@ import jp.tonyu.soytext2.servlet.Auth;
 import jp.tonyu.soytext2.servlet.DocumentProcessor;
 import jp.tonyu.soytext2.servlet.HttpContext;
 import jp.tonyu.soytext2.servlet.Workspace;
+import jp.tonyu.util.CacheMap;
 import jp.tonyu.util.Ref;
 
 import org.mozilla.javascript.Context;
@@ -70,7 +71,10 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
+
 public class DocumentLoader implements Wrappable, IDocumentLoader {
+    public static final String PERMITTED_ROM_COMMANDS = "permittedROMCommands";
+
     public static final jp.tonyu.util.Context<DocumentLoader> cur=new jp.tonyu.util.Context<DocumentLoader>();
     // private static final Object LOADING = "LOADING";
     //public static final Pattern idpatWiki=DocumentProcessor.idpatWiki;// Pattern.compile("\\[\\[([^\\]]+)\\]\\]");
@@ -80,7 +84,7 @@ public class DocumentLoader implements Wrappable, IDocumentLoader {
     // final LooseTransaction looseTransaction;
     // Map<String, Scriptable>objs=new HashMap<String, Scriptable>();
     private final DocumentSet documentSet;
-    private Map<String, DocumentScriptable> objs=new HashMap<String, DocumentScriptable>();
+    private Map<String, DocumentScriptable> objs=new CacheMap<String, DocumentScriptable>();
     private final JSSession jsSession;
     public static WeakHashMap<DocumentLoader, Boolean> loaders=new WeakHashMap<DocumentLoader, Boolean>();
     final LooseTransaction ltr;

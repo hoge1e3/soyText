@@ -17,76 +17,39 @@
  */
 SoyText={}; //test
 SoyText.generateContent=function (d) {
-	var buf="";
-	var ctx={
-	   d2sym:{},
-	   indentC:0,
-	   indentBr: function () {
-		 this.indentC++;
-		 return this.br();
-	   },
-	   dedentBr: function (){
-		   this.indentC--;
-		   return this.br();
-	   },
-	   br: function () {
-		   return "\n"+this.curIndent();
-	   },
-	   curIndent:function () {
-		   return rept("    ",this.indentC);
-	   },
-	   noConstructor:true
-	};
-	/*if (d.scope) {
-		for (var k in d.scope) {
-			var value=d.scope[k];
-			buf+="var "+k+"="+expr(value ,ctx)+";\n";
-			var id=isDocument(value);
-			if (id) ctx.d2sym[id]=k;
-		}
-	}*/
-	if (d._scope) {
-        for (var k in d._scope) {
-            var value=d._scope[k];
-            if (isDocument(value)) {
-                ctx.d2sym[value._id]=k;
-            }
-        }
+    var expr;
+    function rept(str,times) {
+        var res="";
+        for (;times>0;times--) res+=str;
+        return res;
     }
-	buf+="$.extend(_,"+hash(d,ctx)+");"
-	return buf;
-
-	function expr(value,ctx) {
-		if (isDocument(value)) {
-	        return document(value,ctx);
-		} else if (isHashBlob(value)) {
-			return hashBlob(value);
-	     } else if (typeof value=="number") {
-	        return value;
-	     } else if (typeof value=="boolean") {
-	        return value+"";
-	     } else if (typeof value=="function") {
-	    	 return func(value,ctx);
-	     } else if (typeof value=="string") {
-	        return str(value,ctx);
-	     } else if (value==null) {
-	        return "null";
-	     } else if (typeof value=="object") {
-	        if (value instanceof Array) {
-	           return ary(value,ctx);
-	        } else {
-	           return hash(value,ctx);
-	        }
-	     } else {
-	        return "null";
-	     }
-	}
+    function isSymbol(s) {
+        return s.match(/^[a-zA-Z_\$][\w\d\$]*$/);
+    }
+    function hashKey(s) {
+        if (isSymbol(s)) return s;
+        else return str(s);
+    }
 	function func(f,ctx) {
    	     f=SoyText.decompile(f,ctx.indentC*4);
    	     //f=f+"";
 	     f=f.replace(/\r/g,"").replace(/^\n/,"").replace(/^\s*/,"").replace(/\n$/,"");
 	     return f;
 	}
+	function isDocument(d) {
+	    return SoyText.isDocument(d);
+	}
+	function isHashBlob(d) {
+	    return SoyText.isHashBlob(d);
+	}
+	function str(s) {
+	    s=s.replace(/\\/g,"\\\\")
+	    .replace(/\n/g,"\\n")
+	    .replace(/\r/g,"\\r")
+	    .replace(/\"/g,"\\\"");
+	    return "\""+s+"\"";
+	}
+
 	function hash(h,ctx) {
 		var blessed;
 		if (isDocument(h.constructor)) { //} || typeof(h.constructor)=="function") {  in what case?
@@ -115,19 +78,6 @@ SoyText.generateContent=function (d) {
 	   });
        return res+ctx.dedentBr()+"}"+(blessed?")":"");
 	}
-	function isDocument(d) {
-		return SoyText.isDocument(d);
-	}
-	function isHashBlob(d) {
-		return SoyText.isHashBlob(d);
-	}
-    function str(s) {
-	     s=s.replace(/\\/g,"\\\\")
-	        .replace(/\n/g,"\\n")
-	        .replace(/\r/g,"\\r")
-	        .replace(/\"/g,"\\\"");
-	     return "\""+s+"\"";
-	}
 	function ary(s,ctx) {
 	    var res="["+ctx.indentBr();
 	    res+=s.map(function (e) { return expr(e,ctx); }).join(", "+ctx.br());
@@ -145,17 +95,65 @@ SoyText.generateContent=function (d) {
 	function hashBlob(h,ctx) {
 		return "$.hashBlob("+str(h.getHash())+")";
 	}
-    function rept(str,times) {
-    	var res="";
-    	for (;times>0;times--) res+=str;
-    	return res;
+
+    function expr(value,ctx) {
+        if (value && value.onGenerateLiteral) {
+            try {  return value.onGenerateLiteral(ctx); }
+            catch (e) {return str("generate failed - "+e);}
+        } else if (isDocument(value)) {
+            return document(value,ctx);
+        } else if (isHashBlob(value)) {
+            return hashBlob(value);
+         } else if (typeof value=="number") {
+            return value;
+         } else if (typeof value=="boolean") {
+            return value+"";
+         } else if (typeof value=="function") {
+             return func(value,ctx);
+         } else if (typeof value=="string") {
+            return str(value,ctx);
+         } else if (value==null) {
+            return "null";
+         } else if (typeof value=="object") {
+            if (value instanceof Array) {
+               return ary(value,ctx);
+            } else {
+               return hash(value,ctx);
+            }
+         } else {
+            return "null";
+         }
     }
-    function isSymbol(s) {
-    	return s.match(/^[a-zA-Z_\$][\w\d\$]*$/);
+    var buf="";
+    var ctx={
+       d2sym:{},
+       indentC:0,
+       indentBr: function () {
+         this.indentC++;
+         return this.br();
+       },
+       dedentBr: function (){
+           this.indentC--;
+           return this.br();
+       },
+       br: function () {
+           return "\n"+this.curIndent();
+       },
+       curIndent:function () {
+           return rept("    ",this.indentC);
+       },
+       noConstructor:true
+    };
+    if (d._scope) {
+        for (var k in d._scope) {
+            var value=d._scope[k];
+            if (isDocument(value)) {
+                ctx.d2sym[value._id]=k;
+            }
+        }
     }
-    function hashKey(s) {
-    	if (isSymbol(s)) return s;
-    	else return str(s);
-    }
+    buf+="$.extend(_,"+hash(d,ctx)+");"
+    return buf;
+
 }; // tohash
 

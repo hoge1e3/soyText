@@ -47,7 +47,7 @@ public class JSSession {
     // public static final jp.tonyu.util.Context<JSSession> cur=new
     // jp.tonyu.util.Context<JSSession>();
     public final Scriptable root;
-    public static boolean optimize=true;
+    public static boolean optimize=false;
     private Scriptable initObject(Context cx) {
         ScriptableObject o=cx.initStandardObjects();
         /*
